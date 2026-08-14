@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Interactive Digital Textbook — Computer Architecture / Performance" />
+  <title>CA · บทที่ 5 — Performance (การวัดประสิทธิภาพ)</title>
+
+  <!-- App styles — โหลดก่อนเสมอ (สำคัญต่อการแสดงผล) -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS (Play CDN) — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- ส่วนประกอบเฉพาะ Com Arch บท 5 -->
+  <style>
+    /* ---------- ตารางเครื่องบิน / ข้อมูล ---------- */
+    .fmt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .fmt-table th, .fmt-table td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; }
+    .fmt-table th { background: var(--card-2); font-weight: 700; }
+    .fmt-table td { color: var(--text-2); }
+    .fmt-table code { font-family: Consolas, Monaco, monospace; color: var(--cyan); font-size: 12px; }
+    .fmt-table .hi { color: var(--cyan); font-weight: 800; }
+    .fmt-table .ans { color: var(--success); font-weight: 800; }
+
+    /* ---------- สูตร ---------- */
+    .formula {
+      background: rgba(0,0,0,.42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 18px; font-family: Consolas, Monaco, monospace; font-size: 16px;
+      text-align: center; margin: 8px auto; max-width: 620px; line-height: 1.8;
+    }
+    .formula .hl { color: var(--cyan); font-weight: 800; }
+    .formula .sm { color: var(--text-3); font-size: 12px; }
+    .formula .unit { color: var(--text-2); font-size: 12.5px; }
+
+    /* ---------- ขั้นตอน ---------- */
+    .step-list { display: flex; flex-direction: column; gap: 8px; }
+    .step-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text-2);
+    }
+    .step-box b { color: var(--text); }
+    .step-box code { font-family: Consolas, Monaco, monospace; color: var(--cyan); }
+    .ans-ok { color: var(--success); font-weight: 800; }
+    .ans-err { color: var(--danger); font-weight: 800; }
+
+    /* ---------- แถบสัดส่วนเวลา (slide 13) ---------- */
+    .time-bar { display: flex; height: 34px; border-radius: 10px; overflow: hidden; font-size: 11px; font-weight: 800; color: #fff; }
+    .time-bar div { display: flex; align-items: center; justify-content: center; }
+    .tb-alu { background: #2563eb; }
+    .tb-load { background: #0891b2; }
+    .tb-store { background: #7c3aed; }
+    .tb-branch { background: #db2777; }
+
+    /* ---------- ข้อสอบแบบพิมพ์คำตอบ (สร้างโดย app.js) ---------- */
+    .exam-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .exam-input {
+      flex: 1; min-width: 220px;
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; color: var(--text); font-family: Consolas, Monaco, monospace;
+      font-size: 15px; outline: none; transition: border-color .2s;
+    }
+    .exam-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(56, 189, 248, .15); }
+    .exam-feedback {
+      display: flex; gap: 12px; align-items: flex-start;
+      border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
+    }
+    .exam-feedback.ok { border-color: rgba(52, 211, 153, .5); background: rgba(52, 211, 153, .08); }
+    .exam-feedback.bad { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .08); }
+    .exam-feedback .ef-mark { font-size: 22px; line-height: 1.2; }
+    .exam-feedback b { font-size: 15px; }
+    .exam-feedback .ef-your { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+    .exam-feedback .ef-ans { font-size: 13px; color: var(--success); margin-top: 2px; }
+    .exam-feedback code { font-family: Consolas, Monaco, monospace; background: rgba(0,0,0,.35); padding: 2px 8px; border-radius: 6px; color: var(--cyan); }
+  </style>
+</head>
+<body data-page="chapter" data-chapter="5">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header id="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="เปิดเมนูบทเรียน" title="เมนู">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <div class="brand">
+      <div class="cn-logo" aria-hidden="true">CA</div>
+      <div class="brand-titles">
+        <h1>สถาปัตยกรรมคอมพิวเตอร์</h1>
+        <p id="headerChapterLabel">Performance · บทที่ 5</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="icon-btn" id="homeBtn" aria-label="กลับไปเมนูหลัก" title="เมนูหลัก">
+        <i data-lucide="home"></i>
+      </button>
+      <button class="icon-btn" id="notesBtn" aria-label="เปิดบันทึกย่อ" title="บันทึกย่อ (Notes)">
+        <i data-lucide="notebook-pen"></i>
+      </button>
+
+      <div class="header-progress" aria-label="ความคืบหน้า">
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="headerProgressBar">
+          <div class="progress-fill" id="headerProgressFill"></div>
+        </div>
+        <span class="progress-count" id="headerProgressCount">1 / 24</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= SHELL ================= -->
+  <div class="shell">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar" aria-label="เมนูบทเรียน">
+      <div class="sidebar-head">
+        <div class="sidebar-head-title">
+          <h2 id="sidebarChapterTitle">เมนูบทที่ 5</h2>
+          <p id="sidebarChapterSub">หัวข้อในสัปดาห์นี้ · 24 หัวข้อ</p>
+        </div>
+        <button class="icon-btn sidebar-close" id="sidebarCloseBtn" aria-label="ปิดเมนูบทเรียน" title="ปิดเมนู">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="sidebar-info">
+        <i data-lucide="info"></i>
+        <span>คลิกหัวข้อหรือสไลด์เพื่อข้ามไปได้เลย<br />เรียนทีละสไลด์เพื่อเก็บเนื้อหาให้ครบ</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav" aria-label="สารบัญสไลด์"></nav>
+      <div class="sidebar-foot">
+        <div class="sf-top"><span>ความคืบหน้า</span><b id="sidebarPct">0%</b></div>
+        <div class="progress-track"><div class="progress-fill" id="sidebarProgressFill"></div></div>
+        <p class="mt-2 text-3" style="font-size:12px" id="sidebarDone">ยังไม่ได้เรียนสไลด์ใดเลย — เริ่มที่ Cover ได้เลย!</p>
+      </div>
+    </aside>
+
+    <!-- ================= STAGE ================= -->
+    <main class="stage">
+
+      <div class="slide-viewport" id="viewport">
+        <!-- ============ SLIDE 1 · COVER ============ -->
+        <section class="slide-view" data-title="Cover — บทที่ 5: Performance" aria-label="สไลด์ 1: เปิดบทเรียน">
+          <div class="slide-inner">
+            <div class="center">
+              <div class="cn-logo float-y" style="width:74px;height:74px;font-size:28px;border-radius:22px;margin:0 auto 18px">CA</div>
+              <p class="slide-eyebrow" style="justify-content:center">COMPUTER ARCHITECTURE · CHAPTER 5</p>
+              <h2 class="slide-title" style="font-size:clamp(30px,5vw,54px);text-align:center">
+                Performance — <span class="grad-text">การวัดประสิทธิภาพ</span>
+              </h2>
+              <p class="slide-subtitle" style="text-align:center;margin:6px auto 0;max-width:660px">
+                Response Time vs Throughput · CPU time = IC × CPI × Clock Cycle Time · Weighted CPI ·
+                Benchmark (SPEC CPU2006) · Amdahl's Law — จบด้วยข้อสอบคำนวณ 15 ข้อ
+              </p>
+
+              <div class="stat-chips" style="justify-content:center;margin-top:24px">
+                <span class="stat-chip"><i data-lucide="layers"></i> 24 Slides</span>
+                <span class="stat-chip"><i data-lucide="help-circle"></i> 10 Quiz</span>
+                <span class="stat-chip"><i data-lucide="square-stack"></i> 16 Flashcards</span>
+                <span class="stat-chip"><i data-lucide="book-marked"></i> 22 Glossary</span>
+              </div>
+
+              <button class="btn btn-primary mt-6" id="startBtn" style="font-size:16px;padding:14px 30px">
+                Start Learning <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 2 · ภาพรวม ============ -->
+        <section class="slide-view" data-title="ภาพรวม — ทำไมต้องวัดประสิทธิภาพ" aria-label="สไลด์ 2: สิ่งที่จะเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER OVERVIEW</p>
+            <h2 class="slide-title">ทำไมต้องวัด "ประสิทธิภาพ"?</h2>
+            <p class="slide-subtitle">ลองนึกภาพ 2 สถานการณ์ — ทั้งสองฝั่งต้องการ "ตัวเลขวัดผล" ที่ชัดเจน ไม่งั้นเถียงกันไม่จบว่าเครื่องไหนดีกว่า</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable">
+                <h3 class="card-title"><i data-lucide="shopping-cart" class="cyan"></i>มุมมองคนซื้อคอมพิวเตอร์</h3>
+                <p class="card-text small mt-2">มีเครื่องให้เลือกหลายรุ่น — เครื่องไหนเร็วที่สุด? ถูกที่สุด? หรือคุ้มค่าที่สุด (เร็ว ÷ ราคา)?</p>
+              </div>
+              <div class="card hoverable">
+                <h3 class="card-title"><i data-lucide="cpu" class="cyan"></i>มุมมองคนออกแบบ CPU</h3>
+                <p class="card-text small mt-2">มีทางเลือกออกแบบหลายแบบ — แบบไหนทำให้เร็วขึ้นมากที่สุดโดยต้นทุนน้อยที่สุด?</p>
+              </div>
+            </div>
+
+            <div class="formula mt-6">
+              เราจะเรียน: <span class="hl">Response Time</span> · <span class="hl">CPU time</span> · <span class="hl">IC × CPI × CT</span> · <span class="hl">Weighted CPI</span> · <span class="hl">Benchmark</span> · <span class="hl">Amdahl's Law</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 3 · 2 แบบของ Performance ============ -->
+        <section class="slide-view" data-title="ประสิทธิภาพมี 2 แบบ (เครื่องบิน)" aria-label="สไลด์ 3: 2 แบบของ Performance">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TWO KINDS OF PERFORMANCE</p>
+            <h2 class="slide-title">ประสิทธิภาพมี 2 แบบ — ที่คนมักสับสน</h2>
+            <p class="slide-subtitle">ตัวอย่าง: เครื่องบิน 2 ลำ บินจากวอชิงตัน ดีซี ไปปารีส — ลำไหน "เร็วกว่า"? ขึ้นอยู่กับว่าคุณสนใจอะไร</p>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>เครื่องบิน</th><th>เวลาบิน</th><th>ความเร็วสูงสุด</th><th>ผู้โดยสาร</th><th>คนที่ส่งได้ต่อชั่วโมง</th></tr>
+                <tr><td>Boeing 747</td><td>6.5 ชม.</td><td>610 mph</td><td>470 คน</td><td class="hi">286,700</td></tr>
+                <tr><td>Concorde</td><td class="hi">3 ชม.</td><td>1350 mph</td><td>132 คน</td><td>178,200</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable">
+                <h3 class="card-title"><i data-lucide="user" class="cyan"></i>คุณเป็นผู้โดยสาร 1 คน</h3>
+                <p class="card-text small mt-2">อยากถึงเร็วที่สุด → สนใจ <b class="cyan">Concorde</b> (ใช้เวลาน้อยกว่า 3 ชม. vs 6.5 ชม.)</p>
+              </div>
+              <div class="card hoverable">
+                <h3 class="card-title"><i data-lucide="plane" class="cyan"></i>คุณเป็นสายการบิน</h3>
+                <p class="card-text small mt-2">อยากขนคนให้ได้เยอะที่สุดต่อวัน → สนใจ <b class="cyan">Boeing 747</b> (286,700 vs 178,200 คน/ชม.)</p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ในคอมพิวเตอร์ก็เหมือนกัน:</b><br /><b class="cyan">Response Time</b> (Execution Time) = เวลาทำ "งานเดียว" ให้เสร็จ · <b class="cyan">Throughput</b> (Bandwidth) = จำนวนงานที่เสร็จต่อหน่วยเวลา — สองอย่างนี้ไม่ใช่สิ่งเดียวกัน บางทีก็สวนทางกัน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 4 · นิยาม Performance ============ -->
+        <section class="slide-view" data-title="นิยาม Performance แบบคณิตศาสตร์" aria-label="สไลด์ 4: นิยาม Performance">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">DEFINITION</p>
+            <h2 class="slide-title">นิยาม "Performance" แบบคณิตศาสตร์</h2>
+            <p class="slide-subtitle">กติกา: ตัวเลขยิ่งมาก ยิ่งดี (bigger is better) — ถ้าสนใจ response time เขานิยามว่า...</p>
+
+            <div class="formula mt-6">
+              performance(x) = <span class="hl">1 / execution_time(x)</span>
+              <div class="sm">เครื่องที่ใช้เวลาน้อย = performance สูง (กลับเศษกลับส่วนกัน)</div>
+            </div>
+
+            <div class="formula">
+              "F เร็วกว่า S อยู่ n เท่า" หมายถึง<br />
+              n = performance(F) / performance(S) = <span class="hl">execution_time(S) / execution_time(F)</span>
+            </div>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>ทำไมต้องกลับเศษ?</b> เพราะ performance ใหญ่ ⇔ เวลาน้อย — การเทียบ ratio ของเวลาเลยตรงไปตรงมาที่สุด</div>
+              <div class="step-box"><b>ตัวอย่าง:</b> F ใช้ 5 วินาที S ใช้ 10 วินาที → F เร็วกว่า 10/5 = <b class="ans-ok">2 เท่า</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 5 · ตัวอย่างเครื่องบิน ============ -->
+        <section class="slide-view" data-title="ตัวอย่างเครื่องบิน — เร็วกว่ากี่เท่า" aria-label="สไลด์ 5: ตัวอย่างเครื่องบิน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WORKED EXAMPLE</p>
+            <h2 class="slide-title">เครื่องบิน — "เร็วกว่ากี่เท่า" เปลี่ยนไปตามสิ่งที่วัด</h2>
+            <p class="slide-subtitle">คำตอบเปลี่ยนไปตามว่าเรากำลังพูดถึง performance แบบไหน</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="timer" class="cyan"></i>เทียบ Response Time (เวลาบิน)</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> Concorde ใช้ 3 ชม. · Boeing 747 ใช้ 6.5 ชม.</div>
+                  <div class="step-box"><b>2.</b> n = time(747) / time(Concorde) = 6.5 / 3</div>
+                  <div class="step-box"><b>3.</b> = <b class="ans-ok">2.17 ≈ 2.2 เท่า</b> — Concorde เร็วกว่า</div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="users" class="cyan"></i>เทียบ Throughput (คนต่อชั่วโมง)</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> 747: 286,700 · Concorde: 178,200 คน/ชม.</div>
+                  <div class="step-box"><b>2.</b> n = 286,700 / 178,200</div>
+                  <div class="step-box"><b>3.</b> = <b class="ans-ok">1.6 เท่า</b> — Boeing 747 ชนะ</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="info"></i>
+              <div><b>อย่าพูด "X% เร็วกว่า" ลอย ๆ</b> — ต้องบอกชัดว่าเรากำลังปรับปรุง <b class="cyan">execution time</b> หรือ <b class="cyan">performance</b> ตัวไหน จะกำกวมน้อยกว่า</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 6 · เวลาในคอมพิวเตอร์ ============ -->
+        <section class="slide-view" data-title="เวลาในคอมพิวเตอร์ — หลายความหมาย" aria-label="สไลด์ 6: เวลา 4 แบบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TIME DEFINITIONS</p>
+            <h2 class="slide-title">"เวลา" ในคอมพิวเตอร์มีหลายความหมาย</h2>
+            <p class="slide-subtitle">บทนี้เน้นวิเคราะห์ CPU time เพราะวัดฝีมือของตัว CPU ได้ตรงกว่า (ไม่ปนกับว่า OS จัดคิวดีหรือแย่)</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="clock" class="cyan"></i>Real / Response / Elapsed time</h3>
+                <p class="card-text small mt-2">เวลาทั้งหมดที่ผ่านไปจริง <b>รวมทุกอย่าง</b> — รอ disk, รอ I/O, รอ OS จัดคิว ฯลฯ</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="cpu" class="cyan"></i>CPU time</h3>
+                <p class="card-text small mt-2">เฉพาะเวลาที่ CPU ทำงานให้โปรแกรมของคุณจริง ๆ — เพราะในเครื่องจริงมีหลายโปรแกรมแย่งคิว CPU กัน</p>
+              </div>
+            </div>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>CPU time แบ่งย่อย</th><th>คืออะไร</th></tr>
+                <tr><td class="hi">User time</td><td>เวลาที่โปรแกรมของคุณทำงานเอง</td></tr>
+                <tr><td class="hi">System time</td><td>เวลาที่ OS ทำงานแทน (เรียกใช้ kernel)</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>Elapsed time = รวมทุกอย่าง · CPU time = เฉพาะ CPU · CPU time = User + System</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 7 · CLOCK CYCLE ============ -->
+        <section class="slide-view" data-title="หน่วยวัดเวลาใน CPU — Clock Cycle" aria-label="สไลด์ 7: Clock Cycle">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CLOCK</p>
+            <h2 class="slide-title">หน่วยวัดเวลาใน CPU — Clock Cycle</h2>
+            <p class="slide-subtitle">CPU มี "นาฬิกา" เดินเป็นจังหวะคงที่ — ทุก ๆ การทำงานในฮาร์ดแวร์ขยับตามจังหวะนี้ ช่วงแต่ละจังหวะเรียกว่า clock cycle</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="hourglass" class="cyan"></i>Clock Cycle Time</h3>
+                <p class="card-text small mt-2">เวลาต่อ 1 จังหวะ เช่น <b class="cyan">2 นาโนวินาที (ns)</b></p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="gauge" class="cyan"></i>Clock Rate (Clock Speed)</h3>
+                <p class="card-text small mt-2">จำนวนจังหวะต่อวินาที เช่น <b class="cyan">500 MHz</b> — เป็น <b>ส่วนกลับ</b> ของ cycle time (เลข GHz บนกล่อง CPU)</p>
+              </div>
+            </div>
+
+            <div class="formula mt-6">
+              Clock Rate = <span class="hl">1 / Clock Cycle Time</span> &nbsp;&nbsp;⇔&nbsp;&nbsp; Clock Cycle Time = <span class="hl">1 / Clock Rate</span>
+              <div class="unit">เช่น 500 MHz → 1 ÷ (500×10⁶) = 2×10⁻⁹ = 2 ns</div>
+            </div>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>จับมือแปลง:</b> clock rate 2 GHz → CT = 1 ÷ (2×10⁹) = 0.5×10⁻⁹ = <b class="ans-ok">0.5 ns</b></div>
+              <div class="step-box"><b>จำหน่วย:</b> 1 MHz = 10⁶ Hz · 1 GHz = 10⁹ Hz · 1 ns = 10⁻⁹ วินาที</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 8 · สูตรขั้น 1 ============ -->
+        <section class="slide-view" data-title="สูตรหัวใจ — CPU time = Cycles × CT" aria-label="สไลด์ 8: ขั้นที่ 1: Cycles × CT">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">KEY FORMULA · STEP 1</p>
+            <h2 class="slide-title">สูตรหัวใจของบทนี้: CPU time</h2>
+            <p class="slide-subtitle">ขั้นที่ 1 — เริ่มจากจำนวน clock cycles ที่ใช้ทั้งหมด คูณด้วยเวลาแต่ละจังหวะ</p>
+
+            <div class="formula mt-6">
+              CPU execution time = <span class="hl">จำนวน Clock Cycles ทั้งหมด × Clock Cycle Time</span>
+            </div>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>ทำไมต้องคูณ?</b> 1 รอบใช้ CT วินาที → ถ้าใช้ทั้งหมด N รอบ ก็ต้องใช้ N × CT วินาที (เหมือนงาน 10 ชิ้น ชิ้นละ 2 ชั่วโมง = 20 ชั่วโมง)</div>
+              <div class="step-box"><b>ตรวจหน่วย:</b> รอบ × (วินาที/รอบ) = <b class="ans-ok">วินาที</b> ✓</div>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="info"></i>
+              <div><b>แต่ยังใช้ไม่ได้จริง</b> เพราะเรายังไม่รู้ว่า "จำนวน clock cycles" มาจากไหน — ไปดูขั้นที่ 2 ต่อเลย</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 9 · สูตรขั้น 2 ============ -->
+        <section class="slide-view" data-title="สูตรหัวใจ — CPU time = IC × CPI × CT" aria-label="สไลด์ 9: ขั้นที่ 2: IC × CPI">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">KEY FORMULA · STEP 2 ⭐⭐⭐</p>
+            <h2 class="slide-title">สูตรที่สำคัญที่สุดของทั้งบท</h2>
+            <p class="slide-subtitle">"จำนวน clock cycles" มาจาก Instruction Count × CPI</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="list-ordered" class="cyan"></i>Instruction Count (IC)</h3>
+                <p class="card-text small mt-2">โปรแกรมนี้มีกี่คำสั่งทั้งหมด — ขึ้นกับว่าเขียนโค้ดยังไง คอมไพล์ยังไง</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="activity" class="cyan"></i>CPI — Cycles Per Instruction</h3>
+                <p class="card-text small mt-2">โดยเฉลี่ย 1 คำสั่งใช้กี่ clock cycle — ขึ้นกับว่า CPU ออกแบบมาดีแค่ไหน</p>
+              </div>
+            </div>
+
+            <div class="formula mt-6">
+              CPU time = <span class="hl">Instruction Count × CPI × Clock Cycle Time</span>
+            </div>
+
+            <div class="formula">
+              CPU time = (คำสั่ง/โปรแกรม) × (รอบ/คำสั่ง) × (วินาที/รอบ) = <span class="hl">วินาที / โปรแกรม</span>
+              <div class="unit">หน่วยตัดกันจนเหลือแค่ "วินาที" พอดี ✓</div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ต้องรู้ครบทั้ง 3 ตัว</b> ถึงจะทำนายเวลาได้จริง — ขาดตัวใดตัวหนึ่งไปจะเดาไม่ถูกเลย</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 10 · MEGAHERTZ MYTH ============ -->
+        <section class="slide-view" data-title="Megahertz Myth — GHz เยอะไม่เสมอไป" aria-label="สไลด์ 10: Megahertz Myth">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WARNING ⚠️</p>
+            <h2 class="slide-title">Megahertz Myth — GHz เยอะ ≠ เร็วเสมอ</h2>
+            <p class="slide-subtitle">performance ไม่ได้ขึ้นกับปัจจัยเดียว — เลข MHz/GHz อย่างเดียวไม่ได้บอกอะไรทั้งหมด</p>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>CPU</th><th>Clock Rate</th><th>CPI</th><th>เวลา/คำสั่ง (CPI ÷ rate)</th></tr>
+                <tr><td>เครื่อง A</td><td>3 GHz (เยอะกว่า!)</td><td>2</td><td>2 ÷ 3 GHz = 0.667 ns</td></tr>
+                <tr><td>เครื่อง B</td><td>2 GHz</td><td>1</td><td class="ans">1 ÷ 2 GHz = 0.5 ns ← เร็วกว่า!</td></tr>
+              </table>
+            </div>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>บทเรียน:</b> CPU ที่ clock rate สูงมากอาจช้ากว่าเครื่องที่ clock rate ต่ำกว่า ถ้า CPI แย่กว่ามาก หรือ Instruction Count เยอะกว่ามาก</div>
+              <div class="step-box"><b>ข้อสอบที่ชอบถาม:</b> "IC เท่ากัน เครื่องไหนเร็วกว่า" → คำนวณ <b class="cyan">CPI ÷ clock rate</b> (หรือ CPI × CT) ต่อคำสั่ง แล้วเทียบกัน</div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>Exam Tip</b>อย่าดูแต่ GHz — ใช้สูตร CPU time = IC × CPI × CT เทียบครบทุกตัวเสมอ</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 11 · วัดค่าแต่ละตัว ============ -->
+        <section class="slide-view" data-title="แต่ละตัวเลขวัดยังไง" aria-label="สไลด์ 11: วัดค่าแต่ละตัว">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEASUREMENT</p>
+            <h2 class="slide-title">แต่ละตัวเลขวัดได้ยังไงจริง ๆ?</h2>
+            <p class="slide-subtitle">วิธีหาค่าของแต่ละปัจจัยในสูตร CPU time</p>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>ปัจจัย</th><th>วิธีหาค่า</th></tr>
+                <tr><td class="hi">Clock Cycle Time</td><td>ดูจาก spec เครื่อง (คือค่า clock rate ที่โฆษณาไว้)</td></tr>
+                <tr><td class="hi">Instruction Count</td><td>นับคำสั่งในโปรแกรม · ใช้โปรแกรมจำลอง (simulator) · หรือ hardware counter ในตัว CPU</td></tr>
+                <tr><td class="hi">CPI</td><td>คำนวณจาก (Execution Time ÷ Clock Cycle Time) ÷ Instruction Count หรือดูจาก hardware counter</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="info"></i>
+              <div><b>หา CPI อีกวิธี</b> — ถัวเฉลี่ยถ่วงน้ำหนัก (weighted average) ดูสไลด์ถัดไปเลย</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 12 · WEIGHTED CPI ============ -->
+        <section class="slide-view" data-title="CPI ถัวเฉลี่ยถ่วงน้ำหนัก" aria-label="สไลด์ 12: Weighted CPI">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WEIGHTED CPI ⭐⭐⭐</p>
+            <h2 class="slide-title">CPI ถัวเฉลี่ยถ่วงน้ำหนัก</h2>
+            <p class="slide-subtitle">คำสั่งแต่ละประเภทใช้จำนวน cycle ไม่เท่ากัน → หา CPI รวมโดยคูณความถี่ แล้วบวกรวม</p>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>ขั้น 1</b> หา CPI ของคำสั่งแต่ละประเภท</div>
+              <div class="step-box"><b>ขั้น 2</b> หา % ความถี่ที่แต่ละประเภทถูกใช้</div>
+              <div class="step-box"><b>ขั้น 3</b> คูณกัน (Freq × CPI) แล้วบวกรวมทุกประเภท</div>
+            </div>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>ประเภทคำสั่ง</th><th>ความถี่ (Freq)</th><th>CPI</th><th>Freq × CPI</th><th>สัดส่วนเวลาที่ใช้จริง</th></tr>
+                <tr><td>ALU</td><td>50%</td><td>1</td><td>0.5</td><td>23%</td></tr>
+                <tr><td>Load</td><td>20%</td><td>5</td><td>1.0</td><td>45%</td></tr>
+                <tr><td>Store</td><td>10%</td><td>3</td><td>0.3</td><td>14%</td></tr>
+                <tr><td>Branch</td><td>20%</td><td>2</td><td>0.4</td><td>18%</td></tr>
+                <tr><td><b>รวม</b></td><td>100%</td><td></td><td class="ans">CPI = 2.2</td><td>100%</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบ!</b>CPI รวม = Σ(freq × CPI) = 0.5 + 1.0 + 0.3 + 0.4 = <b class="cyan">2.2</b> · สัดส่วนเวลา = (freq × CPI) ÷ CPI รวม</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · ใช้บ่อย vs กินเวลา ============ -->
+        <section class="slide-view" data-title="ใช้บ่อย ≠ กินเวลาเยอะ" aria-label="สไลด์ 13: ใช้บ่อย vs กินเวลา">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">INSIGHT 💡</p>
+            <h2 class="slide-title">"ใช้บ่อย" ≠ "กินเวลาเยอะ"</h2>
+            <p class="slide-subtitle">จากตารางที่แล้ว — จุดที่น่าสนใจที่สุดของบทนี้</p>
+
+            <div class="card mt-6" style="padding:20px">
+              <b style="font-size:14.5px">สัดส่วนเวลารวม 100% (ใครกินเวลาเท่าไร)</b>
+              <div class="time-bar mt-3">
+                <div class="tb-alu" style="width:23%">ALU 23%</div>
+                <div class="tb-load" style="width:45%">Load 45%</div>
+                <div class="tb-store" style="width:14%">Store 14%</div>
+                <div class="tb-branch" style="width:18%">Branch 18%</div>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="zap" class="cyan"></i>ALU — ใช้บ่อยแต่เร็ว</h3>
+                <p class="card-text small mt-2">ถูกใช้บ่อยที่สุด (50% ของคำสั่ง) แต่กินเวลารวมแค่ <b class="cyan">23%</b> เพราะแต่ละคำสั่งเร็วมาก (CPI = 1)</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="clock" class="cyan"></i>Load — ใช้ไม่บ่อยแต่ช้า</h3>
+                <p class="card-text small mt-2">ใช้แค่ 20% ของคำสั่ง แต่กินเวลาถึง <b class="cyan">45%</b> เพราะแต่ละคำสั่งช้ามาก (CPI = 5)</p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>บทเรียนสำคัญ</b>ต้องดูทั้ง "ความถี่" และ "CPI" ประกอบกัน ถึงจะรู้ว่าควรไปปรับปรุงส่วนไหนของ CPU ก่อน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 14 · BENCHMARK ============ -->
+        <section class="slide-view" data-title="Benchmark คืออะไร" aria-label="สไลด์ 14: Benchmark">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">BENCHMARK</p>
+            <h2 class="slide-title">Benchmark คืออะไร แล้ววัดยังไงให้แฟร์?</h2>
+            <p class="slide-subtitle">ความเร็วที่วัดได้ขึ้นกับ "รันโปรแกรมอะไรมาทดสอบ" — จึงต้องมีชุดโปรแกรมมาตรฐานที่ทุกคนใช้เหมือนกัน</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="list-check" class="cyan"></i>Workload / Benchmark</h3>
+                <p class="card-text small mt-2">ชุดโปรแกรมมาตรฐาน (workload) ที่ทุกคนใช้ทดสอบเหมือนกัน เพื่อเปรียบเทียบ CPU ต่างรุ่นได้อย่างยุติธรรม</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="refresh-ccw" class="cyan"></i>ต้องอัปเดตทุก ~5 ปี</h3>
+                <p class="card-text small mt-2">เพราะผู้ผลิต CPU อาจแอบออกแบบชิปให้ทำคะแนน benchmark เก่าได้ดีเป็นพิเศษ (โกงทางอ้อม) โดยไม่ได้เร็วขึ้นจริงในงานทั่วไป</p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบ!</b>Benchmark = ชุดโปรแกรมมาตรฐาน · ต้องอัปเดต ~5 ปี · เพื่อกันการ "โกง" benchmark เก่า</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 15 · SPEC ============ -->
+        <section class="slide-view" data-title="SPEC CPU2006" aria-label="สไลด์ 15: SPEC CPU2006">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REAL BENCHMARK</p>
+            <h2 class="slide-title">SPEC CPU2006 — มาตรฐานที่ใช้จริง</h2>
+            <p class="slide-subtitle">จากองค์กร SPEC — แบ่งเป็นชุดทดสอบงานจำนวนเต็ม กับงานทศนิยม</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="hash" class="cyan"></i>CINT2006</h3>
+                <p class="card-text small mt-2">งานจำนวนเต็ม <b class="cyan">12 โปรแกรม</b> — เช่น บีบอัดไฟล์, คอมไพเลอร์, หมากรุก AI</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="sigma" class="cyan"></i>CFP2006</h3>
+                <p class="card-text small mt-2">งานทศนิยม/วิทยาศาสตร์ <b class="cyan">17 โปรแกรม</b> — เช่น พลศาสตร์ของไหล, เคมีควอนตัม</p>
+              </div>
+            </div>
+
+            <div class="formula mt-6">
+              คะแนนทั้งหมดเทียบกับ <span class="hl">เครื่องฐาน (base machine)</span> ที่กำหนดให้ = <span class="hl">100</span>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบ!</b>CINT = จำนวนเต็ม 12 โปรแกรม · CFP = ทศนิยม 17 โปรแกรม · เครื่องฐาน = 100 คะแนน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 16 · คำถามฝึกคิด ============ -->
+        <section class="slide-view" data-title="คำถามฝึกคิด — Peer Instruction" aria-label="สไลด์ 16: คำถามฝึกคิด">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">PEER INSTRUCTION 🧠</p>
+            <h2 class="slide-title">คำถามฝึกคิด: mult เร็วขึ้น 6 เท่า เป็นไปได้ไหม?</h2>
+            <p class="slide-subtitle">ลองคิดก่อนดูเฉลย — บทเรียนสำคัญเรื่อง "ค่าติดลบเป็นไปไม่ได้"</p>
+
+            <div class="card mt-6" style="padding:20px;border-color:rgba(251,191,36,.4)">
+              <b style="font-size:15px">โจทย์</b>
+              <p class="card-text mt-2" style="font-size:14.5px">โปรแกรมหนึ่งรันทั้งหมด 100 วินาที ในนั้นมีคำสั่ง mult กินเวลาไป 80 วินาที — ถ้าอยากให้โปรแกรมทั้งหมดเร็วขึ้น 6 เท่า ต้องทำให้ mult เร็วขึ้นอย่างน้อย 6 เท่า <b>ใช่หรือไม่?</b></p>
+            </div>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>คำตอบ: เท็จ (False)</b> — เร่ง mult อย่างเดียวไม่พอและเป็นไปไม่ได้</div>
+              <div class="step-box"><b>1.</b> อยากเร็ว 6 เท่า → เวลารวมต้องเหลือ 100 ÷ 6 ≈ <b>16.7 วินาที</b></div>
+              <div class="step-box"><b>2.</b> ส่วนที่ไม่ใช่ mult = 100 − 80 = <b>20 วินาที</b> ไม่ถูกเร่งเลย</div>
+              <div class="step-box"><b>3.</b> ต่อให้ mult เหลือ 0 วินาที เวลารวมก็ยังเหลืออย่างน้อย 20 วินาที</div>
+              <div class="step-box"><b>4.</b> 20 วินาที > 16.7 วินาที → <b class="ans-err">เป็นไปไม่ได้</b> ไม่ว่าจะเร่ง mult แรงแค่ไหน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 17 · AMDahl ============ -->
+        <section class="slide-view" data-title="Amdahl's Law — เพดานของการเร่งความเร็ว" aria-label="สไลด์ 17: Amdahl's Law">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">AMDAHL'S LAW ⭐⭐⭐</p>
+            <h2 class="slide-title">Amdahl's Law — เพดานของการเร่งความเร็ว</h2>
+            <p class="slide-subtitle">บทเรียนจากข้อ 16: การเร่งส่วนหนึ่งของโปรแกรม มีเพดานจำกัดเสมอ</p>
+
+            <div class="formula mt-6">
+              การเร่งความเร็วส่วนหนึ่งมีเพดาน = <span class="hl">สัดส่วนที่คุณ "ไม่ได้" เร่ง</span>
+              <div class="unit">ต่อให้เร่งส่วนนั้นแบบไม่จำกัด (เหลือ 0) โปรแกรมรวมก็เร่งได้ไม่เกินเพดานนี้</div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>ตัวอย่าง mult 80%</h3>
+                <p class="card-text small mt-2">ส่วนที่ไม่ได้เร่ง = 20 วินาที → ต่อให้ mult เหลือ 0 วินาที เวลารวมต่ำสุด = <b class="cyan">20 วินาที</b> (เร็วขึ้นได้ไม่เกิน 100/20 = 5 เท่า)</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="target" class="cyan"></i>วิธีเช็ค "เป็นไปได้ไหม"</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> หาเป้า: เวลาใหม่ = เวลาเดิม ÷ ตัวคูณที่ต้องการ</div>
+                  <div class="step-box"><b>2.</b> หาเพดาน: เวลาของส่วนที่ไม่ได้เร่ง</div>
+                  <div class="step-box"><b>3.</b> ถ้าเป้า &lt; เพดาน → <b class="ans-err">เป็นไปไม่ได้</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>เร่งส่วนหนึ่งเร็วแค่ไหนก็ไร้ประโยชน์ ถ้าอีกส่วนหนึ่งยังกินเวลาอยู่ — ต้องดูว่าเร่ง "ส่วนที่กินเวลาเยอะที่สุด" ก่อน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 18 · โจทย์คำนวณ ============ -->
+        <section class="slide-view" data-title="โจทย์คำนวณจับมือทำ" aria-label="สไลด์ 18: โจทย์คำนวณ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WORKED EXAMPLES ⭐⭐⭐</p>
+            <h2 class="slide-title">โจทย์คำนวณ — จับมือทำทีละข้อ</h2>
+            <p class="slide-subtitle">แนวข้อสอบท้ายบท — ลองทำก่อนดูเฉลย</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="gauge" class="cyan"></i>ตัวอย่าง 1 · 500 MHz → กี่ ns?</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> CT = 1 / rate = 1 ÷ (500×10⁶)</div>
+                  <div class="step-box"><b>2.</b> = 2×10⁻⁹ วินาที</div>
+                  <div class="step-box"><b>3.</b> = <b class="ans-ok">2 ns</b></div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="timer" class="cyan"></i>ตัวอย่าง 2 · CPU time</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>โจทย์:</b> IC = 10,000 · CPI = 2 · CT = 1 ns</div>
+                  <div class="step-box"><b>1.</b> CPU time = 10,000 × 2 × 1 ns</div>
+                  <div class="step-box"><b>2.</b> = 20,000 ns = <b class="ans-ok">20 µs</b></div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="zap" class="cyan"></i>ตัวอย่าง 3 · เร่ง mult</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>โจทย์:</b> 100s รวม, mult 80s, เร่ง mult 4 เท่า</div>
+                  <div class="step-box"><b>1.</b> mult ใหม่ = 80 ÷ 4 = 20s</div>
+                  <div class="step-box"><b>2.</b> รวมใหม่ = 20 + 20 = 40s</div>
+                  <div class="step-box"><b>3.</b> เร็วขึ้น = 100 ÷ 40 = <b class="ans-ok">2.5 เท่า</b></div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="sigma" class="cyan"></i>ตัวอย่าง 4 · Weighted CPI</h3>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>โจทย์:</b> ALU 50% (CPI 1) · Load 20% (CPI 5) · Store 10% (CPI 3) · Branch 20% (CPI 2)</div>
+                  <div class="step-box"><b>1.</b> Σ(freq × CPI) = 0.5 + 1.0 + 0.3 + 0.4</div>
+                  <div class="step-box"><b>2.</b> = <b class="ans-ok">2.2</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 19 · SUMMARY ============ -->
+        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 19: สรุปบทเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER SUMMARY</p>
+            <h2 class="slide-title">สรุปบทเรียน</h2>
+            <p class="slide-subtitle">สิ่งที่ต้องจำจากบทนี้</p>
+            <div class="grid-4 mt-6">
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="sigma" class="cyan"></i>CPU time</h3><p class="card-text small">IC × CPI × Clock Cycle Time — ต้องรู้ครบ 3 ตัวถึงทำนายเวลาได้จริง</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="scale" class="cyan"></i>Latency ≠ Throughput</h3><p class="card-text small">เร็วในความหมายหนึ่ง ไม่ได้แปลว่าเร็วในอีกความหมายหนึ่งเสมอไป</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="cpu" class="cyan"></i>User vs CPU time</h3><p class="card-text small">User time ขึ้นกับการจัดคิวของ OS · CPU time ขึ้นกับตัว CPU ล้วน ๆ</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="list-check" class="cyan"></i>Benchmark</h3><p class="card-text small">ชุดทดสอบมาตรฐานเทียบ CPU อย่างแฟร์ · ต้องอัปเดตเรื่อย ๆ ไม่ให้ถูก "โกง"</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="gauge" class="cyan"></i>Megahertz Myth</h3><p class="card-text small">GHz เป็นแค่ 1 ใน 3 ปัจจัย — ไม่ใช่ตัวชี้วัด performance ทั้งหมด</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="trending-up" class="cyan"></i>Amdahl's Law</h3><p class="card-text small">เร่งส่วนหนึ่งมีเพดานจำกัด = สัดส่วนที่ไม่ได้เร่ง</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="activity" class="cyan"></i>Weighted CPI</h3><p class="card-text small">Σ(freq × CPI) — ใช้บ่อย ≠ กินเวลาเยอะ</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14px"><i data-lucide="hash" class="cyan"></i>SPEC CPU2006</h3><p class="card-text small">CINT 12 + CFP 17 · เครื่องฐาน = 100</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 20 · CHEAT ============ -->
+        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 20: สูตรจำก่อนสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM CHEAT SHEET</p>
+            <h2 class="slide-title">สูตรจำก่อนสอบ</h2>
+            <p class="slide-subtitle">รวมสูตรและตัวเลขสำคัญแบบกระชับ — ทบทวนก่อนสอบในไม่กี่นาที</p>
+            <div class="cheat-grid mt-6">
+              <div class="cheat-item"><span class="term">performance(x)</span><span class="arrow">→</span><span class="def">1 / execution_time(x)</span></div>
+              <div class="cheat-item"><span class="term">F เร็วกว่า S</span><span class="arrow">→</span><span class="def">n = time(S) / time(F)</span></div>
+              <div class="cheat-item"><span class="term">CPU time</span><span class="arrow">→</span><span class="def">IC × CPI × Clock Cycle Time</span></div>
+              <div class="cheat-item"><span class="term">Clock cycle time</span><span class="arrow">→</span><span class="def">1 / clock rate เช่น 500 MHz → 2 ns</span></div>
+              <div class="cheat-item"><span class="term">Clock rate</span><span class="arrow">→</span><span class="def">1 / cycle time เช่น 2 ns → 500 MHz</span></div>
+              <div class="cheat-item"><span class="term">CPI</span><span class="arrow">→</span><span class="def">Cycles Per Instruction — เฉลี่ยต่อ 1 คำสั่ง</span></div>
+              <div class="cheat-item"><span class="term">Weighted CPI</span><span class="arrow">→</span><span class="def">Σ (freq × CPI) เช่น 0.5+1.0+0.3+0.4 = 2.2</span></div>
+              <div class="cheat-item"><span class="term">ALU 50% CPI 1</span><span class="arrow">→</span><span class="def">กินเวลาแค่ 23% (ใช้บ่อย ≠ กินเวลาเยอะ)</span></div>
+              <div class="cheat-item"><span class="term">Load 20% CPI 5</span><span class="arrow">→</span><span class="def">กินเวลาถึง 45% เพราะ CPI สูง</span></div>
+              <div class="cheat-item"><span class="term">Megahertz Myth</span><span class="arrow">→</span><span class="def">GHz เยอะ ≠ เร็วเสมอ — ต้องดู IC + CPI ด้วย</span></div>
+              <div class="cheat-item"><span class="term">Benchmark</span><span class="arrow">→</span><span class="def">ชุดทดสอบมาตรฐาน ต้องอัปเดตทุก ~5 ปี</span></div>
+              <div class="cheat-item"><span class="term">SPEC CPU2006</span><span class="arrow">→</span><span class="def">CINT 12 + CFP 17 · เครื่องฐาน = 100</span></div>
+              <div class="cheat-item"><span class="term">mult 80% เร่ง 4 เท่า</span><span class="arrow">→</span><span class="def">เวลาใหม่ = 20+20 = 40 → เร็วขึ้น 2.5 เท่า</span></div>
+              <div class="cheat-item"><span class="term">mult 80% เร่ง ∞</span><span class="arrow">→</span><span class="def">เพดาน = 20 วินาที (Amdahl)</span></div>
+              <div class="cheat-item"><span class="term">เร็ว 6 เท่าจาก 100s</span><span class="arrow">→</span><span class="def">ต้องเหลือ 16.7s แต่เพดาน 20s → เป็นไปไม่ได้</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 21 · QUIZ ============ -->
+        <section class="slide-view quiz-slide" data-title="Quiz — แบบทดสอบบท 5 (10 ข้อ)" aria-label="สไลด์ 21: แบบทดสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">QUIZ MODE · 10 QUESTIONS</p>
+            <h2 class="slide-title">แบบทดสอบ บทที่ 5</h2>
+            <p class="slide-subtitle">ตอบคำถามแล้วดูคำอธิบายทันที — ครอบคลุม Performance, CPU time, CPI, Benchmark และ Amdahl's Law</p>
+            <div id="quizC5"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 22 · FLASHCARDS ============ -->
+        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 22: การ์ดทบทวน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · FLASHCARDS</p>
+            <h2 class="slide-title">Flashcards — ทบทวนความรู้</h2>
+            <p class="slide-subtitle">อ่านคำถามแล้วลองตอบในใจก่อน — คลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+
+            <div class="split mt-6" style="grid-template-columns:1fr">
+              <div class="flashcard-wrap">
+                <div class="flashcard" id="flashcard5" role="button" tabindex="0" aria-label="การ์ดคำถาม — คลิกเพื่อพลิก">
+                  <div class="flashcard-face flashcard-front">
+                    <span class="fc-eyebrow">QUESTION</span>
+                    <p class="fc-q" id="fcQ5">—</p>
+                    <span class="flashcard-hint">คลิกเพื่อพลิกการ์ด 🔄</span>
+                  </div>
+                  <div class="flashcard-face flashcard-back">
+                    <span class="fc-eyebrow">ANSWER</span>
+                    <p class="fc-a" id="fcA5">—</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-5 wrap" style="justify-content:center">
+              <button class="btn btn-ghost" id="fcPrev5"><i data-lucide="chevron-left"></i> Previous</button>
+              <span class="chip" id="fcCounter5">1 / 16</span>
+              <button class="btn btn-ghost" id="fcNext5">Next <i data-lucide="chevron-right"></i></button>
+              <button class="btn btn-cyan" id="fcShuffle5"><i data-lucide="shuffle"></i> Shuffle</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 23 · GLOSSARY ============ -->
+        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 23: คำศัพท์">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · GLOSSARY</p>
+            <h2 class="slide-title">Glossary — คำศัพท์ที่ควรรู้</h2>
+            <p class="slide-subtitle">ค้นหาคำศัพท์แบบเรียลไทม์ — คลิกคำศัพท์เพื่อดูความหมาย</p>
+
+            <div class="search-box mt-5">
+              <i data-lucide="search"></i>
+              <input type="search" id="glossarySearch5" placeholder="Search term... (ค้นหาคำศัพท์)" aria-label="ค้นหาคำศัพท์" autocomplete="off" />
+            </div>
+            <p class="text-3 mt-3" style="font-size:13px" id="glossaryCount5">22 คำศัพท์</p>
+            <div class="grid-2 mt-4" id="glossaryList5"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 24 · EXAM ============ -->
+        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — พิมพ์คำตอบ 15 ข้อ" aria-label="สไลด์ 24: ข้อสอบหลังเรียน 15 ข้อ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">POST-LESSON EXAM · 15 QUESTIONS</p>
+            <h2 class="slide-title" id="examHeadTitle">ข้อสอบหลังเรียน <span class="grad-text">15 ข้อ</span></h2>
+            <p class="slide-subtitle" id="examHeadSub">คำนวณ CPU time / clock cycle / CPI / การเร่งความเร็ว — <b class="cyan">พิมพ์คำตอบเอง</b> เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้</p>
+            <div id="quizExam5"></div>
+          </div>
+        </section>
+      </div><!-- /viewport -->
+
+      <!-- ================= BOTTOM BAR ================= -->
+      <footer class="bottombar">
+        <button class="bb-nav-btn" id="prevBtn" aria-label="สไลด์ก่อนหน้า">
+          <i data-lucide="chevron-left"></i><span class="bb-label">ก่อนหน้า</span>
+        </button>
+
+        <div class="bb-center">
+          สไลด์ <b id="bbCounter">1</b> / <b id="bbTotal">24</b>
+        </div>
+
+        <div class="bb-tools">
+          <button class="icon-btn" id="fullscreenBtn" aria-label="ขยายสไลด์เต็มจอ" title="ขยายสไลด์">
+            <i data-lucide="maximize-2"></i>
+          </button>
+          <button class="icon-btn" id="printSlidesBtn" aria-label="พิมพ์สไลด์ทั้งหมด" title="พิมพ์สไลด์ทั้งหมด">
+            <i data-lucide="printer"></i>
+          </button>
+          <button class="icon-btn" id="printCardsBtn" aria-label="พิมพ์การ์ดสรุป" title="พิมพ์การ์ดสรุป">
+            <i data-lucide="file-output"></i>
+          </button>
+        </div>
+
+        <button class="bb-nav-btn next" id="nextBtn" aria-label="สไลด์ถัดไป">
+          <span class="bb-label">ถัดไป</span><i data-lucide="chevron-right"></i>
+        </button>
+      </footer>
+
+    </main>
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ================= DRAWER BACKDROP ================= -->
+<div id="drawerBackdrop" aria-hidden="true"></div>
+
+<!-- ================= NOTES PANEL ================= -->
+<aside class="notes-panel" id="notesPanel" aria-label="บันทึกย่อ">
+  <div class="flex items-center justify-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div>
+      <b style="font-size:15px">📝 บันทึกย่อ (Notes)</b>
+      <p class="text-3" style="font-size:12px" id="notesLabel">สไลด์ที่กำลังเรียน</p>
+    </div>
+    <button class="icon-btn" id="notesCloseBtn" aria-label="ปิดบันทึกย่อ"><i data-lucide="x"></i></button>
+  </div>
+  <textarea id="notesTextarea" placeholder="เขียนสิ่งที่ต้องจำจากสไลด์นี้...&#10;เช่น:&#10;- performance(x) = 1 / execution_time(x)&#10;- CPU time = IC × CPI × Clock Cycle Time&#10;- clock rate = 1 / cycle time (500 MHz → 2 ns)&#10;- Weighted CPI = Σ(freq × CPI) เช่น 2.2&#10;- เร่งส่วนเดียวมีเพดาน = ส่วนที่ไม่ได้เร่ง (Amdahl)" aria-label="บันทึกย่อ"></textarea>
+  <div class="text-3" style="padding:10px 20px 14px;font-size:12px;border-top:1px solid var(--border)">
+    💾 บันทึกอัตโนมัติลงในเครื่องของคุณ (localStorage)
+  </div>
+</aside>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= COMPLETION OVERLAY ================= -->
+<div id="completionOverlay" role="dialog" aria-modal="true" aria-label="จบบทเรียน">
+  <div class="card center" style="max-width:440px;position:relative;padding:40px 32px;z-index:1">
+    <div style="font-size:56px" class="float-y">🎉</div>
+    <h2 class="slide-title mt-4" style="font-size:28px">Chapter Complete!</h2>
+    <p class="text-2 mt-2" id="completionMsg">คุณเรียนครบทุกสไลด์แล้ว — ยอดเยี่ยมมาก! <b class="grad-text">Keep Learning!</b></p>
+    <div class="grid-3 mt-5" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneSlides">24</b><p class="text-3" style="font-size:12px">สไลด์</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneScore">–</b><p class="text-3" style="font-size:12px">คะแนน Quiz</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px">100%</b><p class="text-3" style="font-size:12px">ความคืบหน้า</p></div>
+    </div>
+    <div class="flex items-center gap-3 mt-6 wrap" style="justify-content:center">
+      <button class="btn btn-ghost" id="completionCloseBtn">ปิด 🎊</button>
+      <button class="btn btn-primary" id="completionRestartBtn"><i data-lucide="rotate-ccw"></i> เรียนใหม่อีกครั้ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRINT AREA ================= -->
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- App scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

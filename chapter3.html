@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Interactive Digital Textbook — Computer Architecture / Memory, Arithmetic, Shift & Overflow" />
+  <title>CA · บทที่ 3 — Memory, Arithmetic, Shift &amp; Overflow</title>
+
+  <!-- App styles — โหลดก่อนเสมอ (สำคัญต่อการแสดงผล) -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS (Play CDN) — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- ส่วนประกอบเคลื่อนไหวเฉพาะ Com Arch บท 3 -->
+  <style>
+    /* ---------- lw / sw ---------- */
+    .lwsw { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .lwsw .box {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 18px; font-family: Consolas, Monaco, monospace; font-size: 14px;
+      animation: caFloat 3.4s ease-in-out infinite;
+    }
+    .lwsw .box:nth-child(3) { animation-delay: -1.7s; }
+    .lwsw .arrow { font-size: 22px; color: var(--cyan); animation: caNudge 1.4s ease-in-out infinite; }
+    @keyframes caNudge { 0%,100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
+    @keyframes caFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+    /* ---------- bit shift demo ---------- */
+    .bits-line { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
+    .bits-line .b {
+      width: 30px; height: 38px; border-radius: 6px;
+      background: var(--card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: Consolas, Monaco, monospace; font-size: 12px; color: var(--text-2);
+    }
+    .bits-line .b.one { background: rgba(56, 189, 248, .16); border-color: var(--cyan); color: var(--cyan); font-weight: 800; }
+    .bits-line .b.new { animation: caBitPop .4s ease both; border-color: var(--success); color: var(--success); }
+    .bits-line .b.drop { opacity: .25; }
+    @keyframes caBitPop { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
+    .shift-arrow { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--cyan); font-size: 14px; font-weight: 800; margin: 8px 0; }
+
+    /* ---------- truth table ---------- */
+    .truth-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .truth-table th, .truth-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+    .truth-table th { background: var(--card-2); font-weight: 700; }
+    .truth-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+    .truth-table .r1 { color: var(--danger); font-weight: 800; }
+    .truth-table .r0 { color: var(--text-3); }
+
+    /* ---------- add / overflow demo ---------- */
+    .add-demo { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .add-demo .reg {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 16px; font-family: Consolas, Monaco, monospace; font-size: 14px;
+      animation: caFloat 3.4s ease-in-out infinite;
+    }
+    .add-demo .reg:nth-child(2) { animation-delay: -1.1s; }
+    .add-demo .op { font-size: 22px; font-weight: 800; color: var(--cyan); }
+    .add-demo .reg.out { border-color: var(--success); color: var(--success); }
+    .add-demo .reg.over { border-color: var(--danger); color: var(--danger); animation: caShake .5s ease-in-out infinite; }
+    @keyframes caShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+    /* ---------- overflow table ---------- */
+    .ovf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .ovf-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; text-align: center; }
+    .ovf-card .oc-op { font-family: Consolas, Monaco, monospace; font-size: 15px; font-weight: 800; color: var(--cyan); display: block; margin-bottom: 6px; }
+    .ovf-card.ok .oc-op { color: var(--success); }
+    .ovf-card.warn .oc-op { color: var(--warning); }
+    .ovf-card p { font-size: 12.5px; color: var(--text-3); }
+
+    /* ---------- คำสั่ง MIPS ---------- */
+    .asm-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; font-family: Consolas, Monaco, monospace; font-size: 13.5px;
+      line-height: 1.8; overflow-x: auto; white-space: pre;
+    }
+    .asm-code .dir { color: #c084fc; }
+    .asm-code .ins { color: #60a5fa; }
+    .asm-code .reg { color: #f87171; }
+    .asm-code .num { color: #fbbf24; }
+    .asm-code .cmt { color: var(--text-3); font-style: italic; }
+
+    /* ---------- ตาราง trace ---------- */
+    .trace-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .trace-table th, .trace-table td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; }
+    .trace-table th { background: var(--card-2); font-weight: 700; font-size: 12px; }
+    .trace-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+    .trace-table tr:hover td { background: rgba(56, 189, 248, .06); }
+    .trace-table .ans { color: var(--success); font-weight: 800; }
+
+    /* ---------- เปรียบเทียบ signed / unsigned ---------- */
+    .num-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .num-table th, .num-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+    .num-table th { background: var(--card-2); color: var(--text); font-weight: 700; }
+    .num-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+
+    .step-list { display: flex; flex-direction: column; gap: 8px; }
+    .step-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text-2);
+    }
+    .step-box b { color: var(--text); }
+    .step-box code { font-family: Consolas, Monaco, monospace; color: var(--cyan); }
+
+    /* ---------- ข้อสอบแบบพิมพ์คำตอบ (สร้างโดย app.js) ---------- */
+    .exam-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .exam-input {
+      flex: 1; min-width: 220px;
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; color: var(--text); font-family: Consolas, Monaco, monospace;
+      font-size: 15px; outline: none; transition: border-color .2s;
+    }
+    .exam-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(56, 189, 248, .15); }
+    .exam-feedback {
+      display: flex; gap: 12px; align-items: flex-start;
+      border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
+    }
+    .exam-feedback.ok { border-color: rgba(52, 211, 153, .5); background: rgba(52, 211, 153, .08); }
+    .exam-feedback.bad { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .08); }
+    .exam-feedback .ef-mark { font-size: 22px; line-height: 1.2; }
+    .exam-feedback b { font-size: 15px; }
+    .exam-feedback .ef-your { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+    .exam-feedback .ef-ans { font-size: 13px; color: var(--success); margin-top: 2px; }
+    .exam-feedback code { font-family: Consolas, Monaco, monospace; background: rgba(0,0,0,.35); padding: 2px 8px; border-radius: 6px; color: var(--cyan); }
+
+    /* ---------- กล่องโจทย์ในข้อสอบ (สร้างโดย app.js) ---------- */
+    .exam-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 14px 12px; margin-bottom: 16px;
+      font-family: Consolas, Monaco, monospace; font-size: 13px; line-height: 1.7;
+      overflow-x: auto;
+    }
+    .exam-code .exam-code-cap {
+      font-size: 10px; letter-spacing: .14em; font-weight: 800;
+      color: var(--text-3); margin-bottom: 6px; text-transform: uppercase;
+    }
+    .exam-code .exam-code-line.hl {
+      background: rgba(56, 189, 248, .12); border-radius: 6px;
+      padding: 1px 8px; margin: 0 -8px; box-shadow: inset 2px 0 0 var(--cyan);
+    }
+    .exam-code .asm-ins { color: #60a5fa; }
+    .exam-code .asm-reg { color: #f87171; }
+    .exam-code .asm-num { color: #fbbf24; }
+    .exam-code .asm-dir { color: #c084fc; }
+    .exam-code .asm-lab { color: #c084fc; font-weight: 700; }
+
+    @media (max-width: 640px) {
+      .bits-line .b { width: 24px; height: 32px; font-size: 10.5px; }
+    }
+  </style>
+</head>
+<body data-page="chapter" data-chapter="3">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header id="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="เปิดเมนูบทเรียน" title="เมนู">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <div class="brand">
+      <div class="cn-logo" aria-hidden="true">CA</div>
+      <div class="brand-titles">
+        <h1>สถาปัตยกรรมคอมพิวเตอร์</h1>
+        <p id="headerChapterLabel">Memory, Arithmetic, Shift &amp; Overflow · บทที่ 3</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="icon-btn" id="homeBtn" aria-label="กลับไปเมนูหลัก" title="เมนูหลัก">
+        <i data-lucide="home"></i>
+      </button>
+      <button class="icon-btn" id="notesBtn" aria-label="เปิดบันทึกย่อ" title="บันทึกย่อ (Notes)">
+        <i data-lucide="notebook-pen"></i>
+      </button>
+
+      <div class="header-progress" aria-label="ความคืบหน้า">
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="headerProgressBar">
+          <div class="progress-fill" id="headerProgressFill"></div>
+        </div>
+        <span class="progress-count" id="headerProgressCount">1 / 29</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= SHELL ================= -->
+  <div class="shell">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar" aria-label="เมนูบทเรียน">
+      <div class="sidebar-head">
+        <div class="sidebar-head-title">
+          <h2 id="sidebarChapterTitle">เมนูบทที่ 3</h2>
+          <p id="sidebarChapterSub">หัวข้อในสัปดาห์นี้ · 29 หัวข้อ</p>
+        </div>
+        <button class="icon-btn sidebar-close" id="sidebarCloseBtn" aria-label="ปิดเมนูบทเรียน" title="ปิดเมนู">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="sidebar-info">
+        <i data-lucide="info"></i>
+        <span>คลิกหัวข้อหรือสไลด์เพื่อข้ามไปได้เลย<br />เรียนทีละสไลด์เพื่อเก็บเนื้อหาให้ครบ</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav" aria-label="สารบัญสไลด์"></nav>
+      <div class="sidebar-foot">
+        <div class="sf-top"><span>ความคืบหน้า</span><b id="sidebarPct">0%</b></div>
+        <div class="progress-track"><div class="progress-fill" id="sidebarProgressFill"></div></div>
+        <p class="mt-2 text-3" style="font-size:12px" id="sidebarDone">ยังไม่ได้เรียนสไลด์ใดเลย — เริ่มที่ Cover ได้เลย!</p>
+      </div>
+    </aside>
+
+    <!-- ================= STAGE ================= -->
+    <main class="stage">
+
+      <div class="slide-viewport" id="viewport">
+        <!-- ============ SLIDE 1 · COVER ============ -->
+        <section class="slide-view" data-title="Cover — บทที่ 3: Memory, Arithmetic, Shift & Overflow" aria-label="สไลด์ 1: เปิดบทเรียน">
+          <div class="slide-inner">
+            <div class="center">
+              <div class="cn-logo float-y" style="width:74px;height:74px;font-size:28px;border-radius:22px;margin:0 auto 18px">CA</div>
+              <p class="slide-eyebrow" style="justify-content:center">COMPUTER ARCHITECTURE · CHAPTER 3</p>
+              <h2 class="slide-title" style="font-size:clamp(30px,5vw,54px);text-align:center">
+                Memory, Arithmetic, <span class="grad-text">Shift &amp; Overflow</span>
+              </h2>
+              <p class="slide-subtitle" style="text-align:center;margin:6px auto 0;max-width:660px">
+                lw / sw / lb / lbu / sb · add / sub / addi · sll / srl / sra · and / or / xor / nor
+                — พร้อมโปรแกรม bitwise.asm ที่ออกข้อสอบท้ายบท
+              </p>
+
+              <div class="stat-chips" style="justify-content:center;margin-top:24px">
+                <span class="stat-chip"><i data-lucide="layers"></i> 29 Slides</span>
+                <span class="stat-chip"><i data-lucide="help-circle"></i> 10 Quiz</span>
+                <span class="stat-chip"><i data-lucide="square-stack"></i> 16 Flashcards</span>
+                <span class="stat-chip"><i data-lucide="book-marked"></i> 34 Glossary</span>
+              </div>
+
+              <button class="btn btn-primary mt-6" id="startBtn" style="font-size:16px;padding:14px 30px">
+                Start Learning <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 2 · ROADMAP ============ -->
+        <section class="slide-view" data-title="เราจะเรียนอะไรบ้าง" aria-label="สไลด์ 2: สิ่งที่จะเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER OVERVIEW</p>
+            <h2 class="slide-title">เราจะเรียนอะไรบ้างในบทนี้?</h2>
+            <p class="slide-subtitle">เริ่มจากคำสั่ง Memory → การคำนวณและ Overflow → Shift → Logical → เปรียบเทียบ — จบด้วยโปรแกรมข้อสอบ</p>
+            <div class="grid-2 mt-6">
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="database" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">Memory</b><p class="card-text small mt-2">lw / sw / lb / lbu / sb — โหลด-เก็บข้อมูลระหว่าง Register กับ Memory (Word 4 bytes · Byte 1 byte)</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="calculator" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">Arithmetic &amp; Overflow</b><p class="card-text small mt-2">add / sub / addi (ตรวจ Overflow) · addu / addiu / subu (ไม่ตรวจ)</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="arrow-left-right" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">Shift</b><p class="card-text small mt-2">sll (×2) · srl (÷2) · sra (คงเครื่องหมาย)</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="binary" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">Logical</b><p class="card-text small mt-2">and / or / xor / nor · andi / ori · li</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="scale" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">เปรียบเทียบ</b><p class="card-text small mt-2">slt / sltu / sltiu — signed vs unsigned</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="file-code-2" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">bitwise.asm + ข้อสอบ</b><p class="card-text small mt-2">trace โปรแกรม 14 คำถาม + เขียนคำสั่ง 3 ข้อ (พิมพ์คำตอบเอง)</p></div>
+              </div>
+            </div>
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>วิธีเรียนที่แนะนำ</b>สไลด์ 16–23 เป็นหัวใจของข้อสอบ — ทบทวน and/or/xor/nor, sll/srl/sra, slt ตระกูล และโปรแกรม bitwise.asm ให้แม่น</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 3 · LW ============ -->
+        <section class="slide-view" data-title="lw — Load Word" aria-label="สไลด์ 3: lw">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY · LW ⭐⭐⭐</p>
+            <h2 class="slide-title">lw — <span class="grad-text">Load Word</span></h2>
+            <p class="slide-subtitle">lw = Load Word — <b class="cyan">เอาข้อมูลจาก Memory → Register</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">LW $t0, 4($s1)</span>
+              <div class="lwsw" style="margin-top:18px">
+                <span class="box">Memory<br /><small style="color:var(--text-3)">ที่ Address $s1 + 4</small></span>
+                <span class="arrow">↓</span>
+                <span class="box">$t0</span>
+              </div>
+              <p class="text-3 mt-3" style="text-align:center;font-size:13.5px">ไปเอาข้อมูลจาก Memory แล้วเอามาใส่ <b>$t0</b></p>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำคู่นี้ให้แม่น</b><b class="cyan"> lw = Memory → Register</b> · <b class="cyan">sw = Register → Memory</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 4 · SW ============ -->
+        <section class="slide-view" data-title="sw — Store Word" aria-label="สไลด์ 4: sw">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY · SW ⭐⭐⭐</p>
+            <h2 class="slide-title">sw — <span class="grad-text">Store Word</span></h2>
+            <p class="slide-subtitle">sw = Store Word — ตรงข้ามกับ lw คือ <b class="cyan">เอาข้อมูลจาก Register → Memory</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">SW $t0, 4($s1)</span>
+              <div class="lwsw" style="margin-top:18px">
+                <span class="box">$t0</span>
+                <span class="arrow">↓</span>
+                <span class="box">Memory<br /><small style="color:var(--text-3)">ที่ Address $s1 + 4</small></span>
+              </div>
+              <p class="text-3 mt-3" style="text-align:center;font-size:13.5px">เอาข้อมูลใน <b>$t0</b> ไปเก็บไว้ใน Memory</p>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="download" class="cyan"></i>lw = Load</h3>
+                <p class="card-text small">Memory <b class="cyan">→</b> Register — โหลดเข้ามา</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="upload" class="cyan"></i>sw = Store</h3>
+                <p class="card-text small">Register <b class="cyan">→</b> Memory — เก็บออกไป</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 5 · ADDRESS ใน lw/sw ============ -->
+        <section class="slide-view" data-title="Address ใน lw / sw" aria-label="สไลด์ 5: Base + Offset">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY · ADDRESSING</p>
+            <h2 class="slide-title">Address ใน lw / sw — <span class="grad-text">Base + Offset</span></h2>
+            <p class="slide-subtitle">⚠️ อย่าอ่านว่า "เอา $s1 + 4 ไปใส่ $t0" — มันคือการหาตำแหน่ง Memory</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">LW $t0, 4($s1) · วิธีคิด</span>
+              <div class="step-list" style="margin-top:14px">
+                <div class="step-box">ใช้ค่าของ <code>$s1</code> เป็น <b>Base Address</b></div>
+                <div class="step-box">บวก <b>Offset 4</b> เพื่อหาตำแหน่ง Memory ที่ต้องการ → <b>Memory Address = $s1 + 4</b></div>
+                <div class="step-box"><code>lw</code> → อ่านข้อมูลจาก Address นี้ · <code>sw</code> → เขียนข้อมูลไป Address นี้</div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบบ่อย!</b>โจทย์แบบ trace หน่วยความจำ (เช่น q1t8.asm) ใช้หลักนี้ทั้งข้อ — หา Address ก่อน แล้วค่อยดูค่าที่อ่านได้</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 6 · LB / LBU / SB ============ -->
+        <section class="slide-view" data-title="lb / lbu / sb" aria-label="สไลด์ 6: lb / lbu / sb">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY · BYTE</p>
+            <h2 class="slide-title">lb / lbu / sb — <span class="grad-text">จัดการทีละ Byte</span></h2>
+            <p class="slide-subtitle">นอกจาก Word แล้ว MIPS ยังมีคำสั่งที่โหลด/เก็บข้อมูลทีละ 1 Byte</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตารางคำสั่ง Byte</span>
+              <table class="num-table mt-3">
+                <tr><th>คำสั่ง</th><th>ความหมาย</th><th>ทิศทาง</th></tr>
+                <tr><td>lb</td><td>Load Byte (Signed)</td><td>Memory → Register</td></tr>
+                <tr><td>lbu</td><td>Load Byte Unsigned</td><td>Memory → Register</td></tr>
+                <tr><td>sb</td><td>Store Byte</td><td>Register → Memory</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="minus" class="cyan"></i>lb</h3>
+                <p class="card-text small">โหลด 1 Byte แบบ <b>Signed</b> — ขยายเครื่องหมาย (sign-extend)</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="plus" class="cyan"></i>lbu</h3>
+                <p class="card-text small">โหลด 1 Byte แบบ <b>Unsigned</b> — เติม 0 (zero-extend)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 7 · WORD vs BYTE ============ -->
+        <section class="slide-view" data-title="Word กับ Byte ต่างกันยังไง" aria-label="สไลด์ 7: Word vs Byte">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY · UNIT</p>
+            <h2 class="slide-title">Word กับ Byte ต่างกันยังไง?</h2>
+            <p class="slide-subtitle">ใน MIPS ที่เรียน — <b class="cyan">Word = 4 Bytes</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ขนาดข้อมูลของแต่ละคำสั่ง</span>
+              <table class="num-table mt-3">
+                <tr><th>คำสั่ง</th><th>ขนาด</th></tr>
+                <tr><td>lw / sw</td><td class="hi">Load / Store 4 Bytes (1 Word)</td></tr>
+                <tr><td>lb / lbu / sb</td><td class="hi">Load / Store 1 Byte</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card center" style="padding:20px">
+                <i data-lucide="square" style="width:26px;height:26px;color:var(--cyan);margin-bottom:8px"></i>
+                <b>w = Word</b>
+                <p class="card-text small mt-2">lw / sw — 4 bytes</p>
+              </div>
+              <div class="card center" style="padding:20px">
+                <i data-lucide="square-dashed" style="width:26px;height:26px;color:var(--success);margin-bottom:8px"></i>
+                <b>b = Byte</b>
+                <p class="card-text small mt-2">lb / lbu / sb — 1 byte</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 8 · ARITHMETIC ============ -->
+        <section class="slide-view" data-title="Arithmetic — add / sub / addi" aria-label="สไลด์ 8: add / sub / addi">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ARITHMETIC</p>
+            <h2 class="slide-title">Arithmetic — <span class="grad-text">add / sub / addi</span></h2>
+            <p class="slide-subtitle">คำสั่งพื้นฐานสำหรับการคำนวณใน MIPS</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="plus" class="cyan"></i>add</h3>
+                <p class="card-text small">เอา Register 2 ตัวมาบวกกัน<br /><code>add $t0,$t1,$t2</code> → <b>$t0 = $t1 + $t2</b></p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="minus" class="cyan"></i>sub</h3>
+                <p class="card-text small">ลบ<br /><code>sub $t0,$t1,$t2</code> → <b>$t0 = $t1 - $t2</b></p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="hash" class="cyan"></i>addi</h3>
+                <p class="card-text small">Add Immediate — บวกค่าคงที่<br /><code>addi $t0,$t1,10</code> → <b>$t0 = $t1 + 10</b></p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="info" class="cyan"></i>สังเกต</h3>
+                <p class="card-text small">add / sub เป็น R-Format · addi เป็น I-Format (มี immediate 16 บิต)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 9 · OVERFLOW ============ -->
+        <section class="slide-view" data-title="Overflow คืออะไร?" aria-label="สไลด์ 9: Overflow">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ARITHMETIC · OVERFLOW ⭐⭐⭐</p>
+            <h2 class="slide-title">Overflow คืออะไร?</h2>
+            <p class="slide-subtitle">Overflow = <b class="cyan">ผลลัพธ์มีค่ามากหรือน้อยเกินกว่าที่จำนวน Bit ที่กำหนดเก็บได้</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · พื้นที่ 4 bits (สูงสุด 1111 = 15)</span>
+              <div class="add-demo" style="margin-top:18px">
+                <span class="reg">15</span>
+                <span class="op">+</span>
+                <span class="reg">3</span>
+                <span class="op">=</span>
+                <span class="reg over">18 💥</span>
+              </div>
+              <p class="text-3 mt-3" style="text-align:center;font-size:13.5px">15 + 3 = 18 แต่ 4 bits ไม่สามารถแทนค่า 18 ได้ → <b class="danger">เกิด Overflow</b></p>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>บริบท</b>เกิดจากการคำนวณจำนวนเต็มที่มีขนาดจำกัด — หน่วยเก็บมีบิตจำกัด ผลลัพธ์เกินพิกัดจึงล้นออกมา</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 10 · ตรวจ OVERFLOW ============ -->
+        <section class="slide-view" data-title="คำสั่งที่ตรวจ Overflow" aria-label="สไลด์ 10: ตรวจ Overflow">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ARITHMETIC · OVERFLOW</p>
+            <h2 class="slide-title">คำสั่งที่ตรวจ Overflow</h2>
+            <p class="slide-subtitle">มีคำสั่งบางตัวที่ <b class="cyan">ตรวจ Overflow</b> — ถ้าเกิดจะมีการแจ้ง/จัดการตามกลไกของคำสั่ง</p>
+
+            <div class="ovf-grid mt-6">
+              <div class="ovf-card warn"><span class="oc-op">add</span><p>ตรวจ Overflow</p></div>
+              <div class="ovf-card warn"><span class="oc-op">addi</span><p>ตรวจ Overflow</p></div>
+              <div class="ovf-card warn"><span class="oc-op">sub</span><p>ตรวจ Overflow</p></div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>จำง่าย ๆ</b>add / addi / sub (ไม่มี u) = ตรวจ Overflow — ถ้าเกินพิกัดจะเกิด Exception / แจ้งเตือน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 11 · ไม่ตรวจ OVERFLOW ============ -->
+        <section class="slide-view" data-title="คำสั่งที่ไม่ตรวจ Overflow (u)" aria-label="สไลด์ 11: ไม่ตรวจ Overflow">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ARITHMETIC · OVERFLOW</p>
+            <h2 class="slide-title">คำสั่งที่ไม่ตรวจ Overflow <span class="grad-text">(ตัว u)</span></h2>
+            <p class="slide-subtitle">อีกกลุ่มคือ addu / addiu / subu — ตัว <b class="cyan">u</b> สื่อถึง Unsigned</p>
+
+            <div class="ovf-grid mt-6">
+              <div class="ovf-card ok"><span class="oc-op">addu</span><p>ไม่ตรวจ Overflow</p></div>
+              <div class="ovf-card ok"><span class="oc-op">addiu</span><p>ไม่ตรวจ Overflow</p></div>
+              <div class="ovf-card ok"><span class="oc-op">subu</span><p>ไม่ตรวจ Overflow</p></div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="alert-triangle" class="cyan"></i>ตรวจ Overflow</h3>
+                <p class="card-text small"><code>add · addi · sub</code> — สร้าง Exception จาก Integer Overflow</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="shield-check" class="cyan"></i>ไม่ตรวจ Overflow</h3>
+                <p class="card-text small"><code>addu · addiu · subu</code> — ไม่สร้าง Exception</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 12 · SHIFT คืออะไร ============ -->
+        <section class="slide-view" data-title="Shift คืออะไร? (sll / srl)" aria-label="สไลด์ 12: Shift คืออะไร">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">SHIFT</p>
+            <h2 class="slide-title">Shift คืออะไร?</h2>
+            <p class="slide-subtitle">Shift = <b class="cyan">การเลื่อนตำแหน่งของ Bit ไปทางซ้ายหรือขวา</b> — มีคำสั่งสำคัญ sll และ srl</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · เลื่อนบิต</span>
+              <div class="bits-line" style="margin-top:14px">
+                <span class="b one">1</span><span class="b">0</span><span class="b">0</span><span class="b one">1</span><span class="b">0</span><span class="b one">1</span><span class="b">0</span>
+              </div>
+              <div class="shift-arrow">← เลื่อนซ้าย 1 ตำแหน่ง (sll)</div>
+              <div class="bits-line">
+                <span class="b new">1</span><span class="b new">0</span><span class="b new">0</span><span class="b new">1</span><span class="b new">0</span><span class="b new">1</span><span class="b new">0</span><span class="b new">0</span>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำง่าย ๆ</b><b class="cyan"> sll → Left ←</b> · <b class="cyan">srl → Right →</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · SLL ============ -->
+        <section class="slide-view" data-title="sll — Shift Left Logical" aria-label="สไลด์ 13: sll">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">SHIFT · SLL ⭐⭐</p>
+            <h2 class="slide-title">sll — <span class="grad-text">Shift Left Logical</span></h2>
+            <p class="slide-subtitle">เลื่อน Bit ไปทางซ้าย — บิตที่หายไปทางซ้ายตัดทิ้ง เติม 0 ทางขวา</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · 0010 → sll 1 → 0100</span>
+              <div class="bits-line" style="margin-top:14px">
+                <span class="b drop">0</span><span class="b">0</span><span class="b one">1</span><span class="b">0</span>
+              </div>
+              <div class="shift-arrow">sll 1 → <span style="color:var(--success)">2 → 4 (×2)</span></div>
+              <div class="bits-line">
+                <span class="b new">0</span><span class="b new">1</span><span class="b new">0</span><span class="b new">0</span>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="arrow-left" class="cyan"></i>sll 1 ตำแหน่ง</h3>
+                <p class="card-text small">≈ <b class="cyan">คูณ 2</b> — เช่น 2 → 4</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="arrow-left" class="cyan"></i>sll 2 ตำแหน่ง</h3>
+                <p class="card-text small">≈ <b class="cyan">คูณ 4</b> — เช่น 2 → 8</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 14 · SRL ============ -->
+        <section class="slide-view" data-title="srl — Shift Right Logical" aria-label="สไลด์ 14: srl">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">SHIFT · SRL ⭐⭐</p>
+            <h2 class="slide-title">srl — <span class="grad-text">Shift Right Logical</span></h2>
+            <p class="slide-subtitle">เลื่อน Bit ไปทางขวา — เติม 0 ทางซ้ายเสมอ</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · 1000 → srl 1 → 0100</span>
+              <div class="bits-line" style="margin-top:14px">
+                <span class="b one">1</span><span class="b">0</span><span class="b">0</span><span class="b drop">0</span>
+              </div>
+              <div class="shift-arrow">srl 1 → <span style="color:var(--success)">8 → 4 (÷2)</span></div>
+              <div class="bits-line">
+                <span class="b new">0</span><span class="b new">1</span><span class="b new">0</span><span class="b new">0</span>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำง่าย ๆ</b><b class="cyan"> sll 1 → ประมาณ ×2</b> · <b class="cyan">srl 1 → ประมาณ ÷2</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 15 · SRA ============ -->
+        <section class="slide-view" data-title="sra — Shift Right Arithmetic" aria-label="สไลด์ 15: sra">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">SHIFT · SRA ⭐⭐</p>
+            <h2 class="slide-title">sra — <span class="grad-text">Shift Right Arithmetic</span></h2>
+            <p class="slide-subtitle">เลื่อนขวาเหมือน srl แต่ <b class="cyan">เติมตาม bit เครื่องหมาย (MSB)</b> — คงค่าลบให้เป็นลบ</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · 1000 (=-8 signed 4 บิต) → sra 1</span>
+              <div class="bits-line" style="margin-top:14px">
+                <span class="b one">1</span><span class="b">0</span><span class="b">0</span><span class="b drop">0</span>
+              </div>
+              <div class="shift-arrow">sra 1 → <span style="color:var(--success)">เติม 1 (ตาม MSB) → -4</span></div>
+              <div class="bits-line">
+                <span class="b new one">1</span><span class="b new one">1</span><span class="b new">0</span><span class="b new">0</span>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="arrow-right" class="cyan"></i>srl (logical)</h3>
+                <p class="card-text small">เติม <b>0</b> เสมอ — เหมาะกับค่า unsigned</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="arrow-right" class="cyan"></i>sra (arithmetic)</h3>
+                <p class="card-text small">เติมตาม <b>bit เครื่องหมาย</b> — ค่า signed ลบยังคงลบ (÷2 โดยประมาณ)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 16 · LOGICAL ============ -->
+        <section class="slide-view" data-title="Logical — and / or / xor / nor" aria-label="สไลด์ 16: and/or/xor/nor">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">LOGICAL ⭐⭐⭐</p>
+            <h2 class="slide-title">Logical — <span class="grad-text">and / or / xor / nor</span></h2>
+            <p class="slide-subtitle">คำนวณทีละบิต (bitwise) ระหว่าง Register 2 ตัว — หัวใจของข้อสอบบทนี้</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">TRUTH TABLE · 1 บิต</span>
+                <table class="truth-table mt-3">
+                  <tr><th>a</th><th>b</th><th>and</th><th>or</th><th>xor</th><th>nor</th></tr>
+                  <tr><td class="r0">0</td><td class="r0">0</td><td class="r0">0</td><td class="r0">0</td><td class="r0">0</td><td class="r1">1</td></tr>
+                  <tr><td class="r0">0</td><td class="r1">1</td><td class="r0">0</td><td class="r1">1</td><td class="r1">1</td><td class="r0">0</td></tr>
+                  <tr><td class="r1">1</td><td class="r0">0</td><td class="r0">0</td><td class="r1">1</td><td class="r1">1</td><td class="r0">0</td></tr>
+                  <tr><td class="r1">1</td><td class="r1">1</td><td class="r1">1</td><td class="r1">1</td><td class="r0">0</td><td class="r0">0</td></tr>
+                </table>
+                <p class="text-3 mt-3" style="text-align:center;font-size:13px"><b>จำง่าย ๆ:</b> and = 1 เฉพาะ 1&1 · or = มี 1 ก็ 1 · xor = ต่างกันเป็น 1 · nor = กลับบิตของ or</p>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">จับมือทำ · 0x12345678 AND 0xabcd1234</span>
+                <div class="step-list" style="margin-top:12px">
+                  <div class="step-box"><b>1.</b> จับคู่ทีละหลัก (1 หลัก hex = 4 บิต): 1-2-3-4-5-6-7-8 กับ a-b-c-d-1-2-3-4</div>
+                  <div class="step-box"><b>2.</b> ไล่ AND ทีละหลัก: <code>1&a=0, 2&b=2, 3&c=0, 4&d=4, 5&1=1, 6&2=2, 7&3=3, 8&4=0</code></div>
+                  <div class="step-box"><b>3.</b> รวมคำตอบ: <b class="ans-ok">0x02041230</b></div>
+                </div>
+                <p class="text-3 mt-3" style="text-align:center;font-size:12.5px">เทคนิค: แปลง A-F เป็น 4 บิต (a=1010, b=1011...) แล้ว AND ทีละบิต</p>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card"><h3 class="card-title"><i data-lucide="binary" class="cyan"></i>nor = NOT(or)</h3><p class="card-text small">กลับบิตของผล OR — เช่น <code>nor $s2,$s0,$zero</code> = NOT($s0) = complement<br /><span style="font-size:12px">ต่อยอด: 2's complement = complement + 1 → <code>addi $s3,$s2,1</code></span></p></div>
+              <div class="card"><h3 class="card-title"><i data-lucide="binary" class="cyan"></i>xor = ต่างกันเป็น 1</h3><p class="card-text small">1 เฉพาะเมื่อบิตไม่เท่ากัน — ใช้ตรวจความต่างของข้อมูล</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 17 · ANDI / ORI ============ -->
+        <section class="slide-view" data-title="andi / ori — immediate logical" aria-label="สไลด์ 17: andi / ori">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">LOGICAL · IMMEDIATE ⭐⭐⭐</p>
+            <h2 class="slide-title">andi / ori — <span class="grad-text">immediate logical</span></h2>
+            <p class="slide-subtitle">เหมือน and / or แต่ใช้ค่าคงที่ (immediate) — ใช้เลือก/ปิดบิตได้</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · 0x12345678</span>
+              <div class="step-list" style="margin-top:14px">
+                <div class="step-box"><code>andi $t8,$s0,15</code> — AND กับ 0xf → เอาเฉพาะ <b>4 บิตล่าง</b> = <b>0x00000008</b></div>
+                <div class="step-box"><code>ori $t7,$s0,15</code> — OR กับ 0xf → 4 บิตล่างกลายเป็น f = <b>0x1234567f</b></div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบ!</b><code>andi</code> ใช้เป็น <b>mask</b> — เลือกบิตที่ต้องการ (1) และปิดบิตที่ไม่ต้องการ (0) เช่น 0x3fff เก็บบิต 0-13</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 18 · LI ============ -->
+        <section class="slide-view" data-title="li — Load Immediate" aria-label="สไลด์ 18: li">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">PSEUDO-INSTRUCTION</p>
+            <h2 class="slide-title">li — <span class="grad-text">Load Immediate</span></h2>
+            <p class="slide-subtitle">li = ใส่ค่าคงที่ (immediate) ลง Register — ใช้ตั้งค่าเริ่มต้นในโปรแกรม</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง</span>
+              <div class="add-demo" style="margin-top:18px">
+                <span class="reg">li $s0, 0x12345678</span>
+                <span class="op">→</span>
+                <span class="reg out">$s0 = 0x12345678</span>
+              </div>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จริง ๆ แล้ว</b>li เป็น pseudo-instruction — ตัว assembler จะแปลงเป็น addiu / lui+ori ให้อัตโนมัติ แต่เราเขียน li ได้สะดวกกว่า</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 19 · SIGNED vs UNSIGNED ============ -->
+        <section class="slide-view" data-title="Signed vs Unsigned — ตัว u" aria-label="สไลด์ 19: Signed vs Unsigned">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
+            <h2 class="slide-title">Signed vs Unsigned — <span class="grad-text">ตัว u สำคัญมาก</span></h2>
+            <p class="slide-subtitle">Signed มีค่าติดลบได้ · Unsigned ไม่มีค่าติดลบ — จึงมีคำสั่งแยกสองแบบ</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">SIGNED · มีค่าลบ</span>
+                <div class="step-list" style="margin-top:12px">
+                  <div class="step-box">เช่น <b>-10, 0, 10</b></div>
+                  <div class="step-box">ใช้ MSB (บิตซ้ายสุด) เป็นเครื่องหมาย</div>
+                  <div class="step-box">0xabcd1234 แบบ signed = <b class="danger">ค่าลบ</b></div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">UNSIGNED · ไม่มีค่าลบ</span>
+                <div class="step-list" style="margin-top:12px">
+                  <div class="step-box">เช่น <b>0, 1, 2, ...</b></div>
+                  <div class="step-box">ใช้บิตทั้งหมดแทนค่า</div>
+                  <div class="step-box">0xabcd1234 แบบ unsigned = <b class="success">2,882,343,476</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>ถ้าเจอ <code>addu · addiu · subu · sltu · sltiu</code> ให้สังเกตตัว <b class="cyan">u</b> — หมายถึง Unsigned</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 20 · SLT ตระกูล ============ -->
+        <section class="slide-view" data-title="slt / sltu / sltiu — เปรียบเทียบ" aria-label="สไลด์ 20: slt / sltu / sltiu">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">COMPARE ⭐⭐⭐</p>
+            <h2 class="slide-title">slt / sltu / sltiu — <span class="grad-text">เปรียบเทียบ</span></h2>
+            <p class="slide-subtitle">ผลลัพธ์เป็น 1 ถ้า "น้อยกว่า" จริง ไม่งั้นเป็น 0 — ต่างกันที่ <b class="cyan">signed / unsigned / immediate</b></p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">จับมือเปรียบเทียบ · 0x12345678 vs 0xabcd1234</span>
+                <div class="step-list" style="margin-top:12px">
+                  <div class="step-box"><b>1.</b> ดูว่าเป็น signed หรือ unsigned — ดูตัว <b>u</b> ในชื่อคำสั่ง</div>
+                  <div class="step-box"><b>2.</b> <code>slt</code> (signed): 0xabcd1234 มี MSB = 1 → เป็น<b class="danger">ค่าลบ</b> — บวก &lt; ลบ? ไม่จริง → <b class="hi">0</b></div>
+                  <div class="step-box"><b>3.</b> <code>sltu</code> (unsigned): 0xabcd1234 = 2.88 พันล้าน, 0x12345678 = 305 ล้าน — 305M &lt; 2.88B? จริง → <b class="hi">1</b></div>
+                  <div class="step-box"><b>4.</b> <code>sltiu</code> (unsigned + immediate): 2.88 พันล้าน &lt; 9? ไม่จริง → <b class="hi">0</b></div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ตารางสรุป</span>
+                <table class="num-table mt-3">
+                  <tr><th>คำสั่ง</th><th>ความหมาย</th><th>ตัวอย่าง</th><th>ผล</th></tr>
+                  <tr><td>slt</td><td>signed: $rs &lt; $rt</td><td>บวก &lt; ลบ?</td><td class="hi">0</td></tr>
+                  <tr><td>sltu</td><td>unsigned: $rs &lt; $rt</td><td>305M &lt; 2.88B?</td><td class="hi">1</td></tr>
+                  <tr><td>sltiu</td><td>unsigned: $rs &lt; immediate</td><td>2.88B &lt; 9?</td><td class="hi">0</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>จุดพลาดยอดฮิต</b>ตัวเลข hex ตัวเดียวกัน <b>slt</b> มองเป็นลบ (0xabcd1234 = -1.4 พันล้าน) แต่ <b>sltu</b> มองเป็นบวก (2.88 พันล้าน) → คำตอบต่างกัน!</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 21 · เรื่องที่น่าจะออกสอบ ============ -->
+        <section class="slide-view" data-title="เรื่องที่น่าจะออกสอบ" aria-label="สไลด์ 21: เรื่องออกสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM FOCUS ⭐⭐⭐</p>
+            <h2 class="slide-title">เรื่องที่น่าจะออกสอบ</h2>
+            <p class="slide-subtitle">เช็คตัวเองก่อนสอบ — ตอบได้ครบก็พร้อมลุยข้อสอบท้ายบท</p>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>and / or / xor / nor</b> — คำนวณทีละบิตได้ (รู้จัก hex ต่อบิต: a AND 1 = 1&a=0, 2&b=2, ...)</div>
+              <div class="step-box"><b>sll / srl / sra</b> — เลื่อนซ้าย ×2, เลื่อนขวา ÷2, sra เติมตามเครื่องหมาย</div>
+              <div class="step-box"><b>andi / ori</b> — ใช้ immediate เป็น mask เช่น 15 = 0xf, 0x3fff = เก็บบิต 0-13</div>
+              <div class="step-box"><b>slt / sltu / sltiu</b> — signed vs unsigned เปลี่ยนผลลัพธ์ (0xabcd1234: ลบ vs บวก)</div>
+              <div class="step-box"><b>nor กับ $zero</b> = complement · <b>complement + 1</b> = 2's complement</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 22 · BITWISE.ASM ============ -->
+        <section class="slide-view" data-title="โปรแกรมข้อสอบ — bitwise.asm" aria-label="สไลด์ 22: bitwise.asm">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TRACE PROGRAM ⭐⭐⭐⭐⭐</p>
+            <h2 class="slide-title">โปรแกรมข้อสอบ <span class="grad-text">bitwise.asm</span></h2>
+            <p class="slide-subtitle">โปรแกรมที่ใช้ในข้อสอบท้ายบท — ไล่ทีละคำสั่ง หาค่า $t0–$t9 และ $s3–$s6</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">BITWISE.ASM · ตั้งค่าเริ่มต้น</span>
+              <div class="asm-code mt-3"><span class="ins">li</span> <span class="reg">$s0</span>,<span class="num">0x12345678</span>
+<span class="ins">li</span> <span class="reg">$s1</span>,<span class="num">0xabcd1234</span>
+<span class="ins">and</span> <span class="reg">$t0</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">or</span> <span class="reg">$t1</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">xor</span> <span class="reg">$t2</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">nor</span> <span class="reg">$t3</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">sll</span> <span class="reg">$t4</span>,<span class="reg">$s0</span>,<span class="num">5</span>
+<span class="ins">srl</span> <span class="reg">$t5</span>,<span class="reg">$s0</span>,<span class="num">5</span>
+<span class="ins">sra</span> <span class="reg">$t6</span>,<span class="reg">$s0</span>,<span class="num">5</span>
+<span class="ins">ori</span> <span class="reg">$t7</span>,<span class="reg">$s0</span>,<span class="num">15</span>
+<span class="ins">andi</span> <span class="reg">$t8</span>,<span class="reg">$s0</span>,<span class="num">15</span>
+<span class="ins">slt</span> <span class="reg">$t9</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">sltu</span> <span class="reg">$s3</span>,<span class="reg">$s0</span>,<span class="reg">$s1</span>
+<span class="ins">sltiu</span> <span class="reg">$s4</span>,<span class="reg">$s1</span>,<span class="num">9</span>
+<span class="ins">sltiu</span> <span class="reg">$s5</span>,<span class="reg">$s1</span>,<span class="num">9</span>
+<span class="ins">sltiu</span> <span class="reg">$s6</span>,<span class="reg">$s0</span>,<span class="num">9</span></div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="database" class="cyan"></i>ค่าตั้งต้น</h3>
+                <p class="card-text small"><code>$s0 = 0x12345678</code> · <code>$s1 = 0xabcd1234</code> — ทุกคำสั่งอ้างอิงสองค่านี้</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="eye" class="cyan"></i>โจทย์จะถาม</h3>
+                <p class="card-text small">$t0–$t9 และ $s3–$s6 เมื่อรันโปรแกรมสำเร็จ — <b class="cyan">ตอบเลขฐาน 16 นำหน้าด้วย 0x ตัวพิมพ์เล็ก</b></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 23 · TRACE ============ -->
+        <section class="slide-view" data-title="bitwise.asm — ไล่ทีละคำสั่ง" aria-label="สไลด์ 23: trace ทีละคำสั่ง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TRACE STEP-BY-STEP ⭐⭐⭐⭐⭐</p>
+            <h2 class="slide-title">bitwise.asm — <span class="grad-text">ไล่ทีละคำสั่ง</span></h2>
+            <p class="slide-subtitle">ผลลัพธ์ตรงกับข้อสอบท้ายบททุกข้อ — ลองทายคำตอบก่อนดูเฉลย</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">TRACE TABLE · $s0 = 0x12345678 · $s1 = 0xabcd1234</span>
+              <table class="trace-table mt-3">
+                <tr><th>คำสั่ง</th><th>วิธีคิด</th><th>ผลลัพธ์</th></tr>
+                <tr><td>and $t0</td><td>0x12345678 &amp; 0xabcd1234</td><td class="ans">0x02041230</td></tr>
+                <tr><td>or $t1</td><td>0x12345678 | 0xabcd1234</td><td class="ans">0xbbfd567c</td></tr>
+                <tr><td>xor $t2</td><td>0x12345678 ^ 0xabcd1234</td><td class="ans">0xb9f9444c</td></tr>
+                <tr><td>nor $t3</td><td>NOT(or) = NOT(0xbbfd567c)</td><td class="ans">0x4402a983</td></tr>
+                <tr><td>sll $t4,5</td><td>0x12345678 × 32</td><td class="ans">0x468acf00</td></tr>
+                <tr><td>srl $t5,5</td><td>0x12345678 ÷ 32 (เติม 0)</td><td class="ans">0x0091a2b3</td></tr>
+                <tr><td>sra $t6,5</td><td>$s0 เป็นบวก → เท่า srl</td><td class="ans">0x0091a2b3</td></tr>
+                <tr><td>ori $t7,15</td><td>OR กับ 0xf</td><td class="ans">0x1234567f</td></tr>
+                <tr><td>andi $t8,15</td><td>AND กับ 0xf</td><td class="ans">0x00000008</td></tr>
+                <tr><td>slt $t9</td><td>บวก &lt; ลบ (signed)? ไม่</td><td class="ans">0x00000000</td></tr>
+                <tr><td>sltu $s3</td><td>305M &lt; 2.88B (unsigned)? ใช่</td><td class="ans">0x00000001</td></tr>
+                <tr><td>sltiu $s4,9</td><td>0xabcd1234 &lt; 9? ไม่</td><td class="ans">0x00000000</td></tr>
+                <tr><td>sltiu $s5,9</td><td>โจทย์เดิมซ้ำ (เช่นเดียวกับ $s4)</td><td class="ans">0x00000000</td></tr>
+                <tr><td>sltiu $s6,9</td><td>0x12345678 &lt; 9? ไม่</td><td class="ans">0x00000000</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ข้อ 15–17 เป็นการเขียนคำสั่ง</b>nor $s2,$s0,$zero = complement · addi $s3,$s2,1 = 2's complement · andi $s0,$s0,0x3fff = ล้างบิต 14-31</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 24 · SUMMARY ============ -->
+        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 24: สรุปบทเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER SUMMARY</p>
+            <h2 class="slide-title">สรุปบทเรียน</h2>
+            <p class="slide-subtitle">เก็บทุกประเด็นสำคัญของบทนี้ไว้ในหน้าเดียว</p>
+            <div class="grid-4 mt-6">
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="database" class="cyan"></i>lw / sw</h3><p class="card-text small">lw = Memory→Register · sw = Register→Memory · Word = 4 Bytes</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="download" class="cyan"></i>lb / lbu / sb</h3><p class="card-text small">โหลด/เก็บ 1 Byte — lb = signed · lbu = unsigned · sb = store</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="calculator" class="cyan"></i>add / sub / addi</h3><p class="card-text small">ตรวจ Overflow — เกินพิกัดจะแจ้ง/จัดการ</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="shield-check" class="cyan"></i>addu / addiu / subu</h3><p class="card-text small">ไม่ตรวจ Overflow — ตัว u = Unsigned</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="arrow-left" class="cyan"></i>sll</h3><p class="card-text small">เลื่อนซ้าย เติม 0 — ≈ คูณ 2 ต่อตำแหน่ง</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="arrow-right" class="cyan"></i>srl / sra</h3><p class="card-text small">เลื่อนขวา ≈ หาร 2 — srl เติม 0 · sra เติมตามเครื่องหมาย</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="binary" class="cyan"></i>and/or/xor/nor</h3><p class="card-text small">ทีละบิต · nor = NOT(or) · andi/ori ใช้ mask</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="scale" class="cyan"></i>slt/sltu/sltiu</h3><p class="card-text small">1 ถ้าน้อยกว่า — signed vs unsigned ให้ผลต่างกัน</p></div>
+            </div>
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>complement = nor กับ $zero · 2's complement = complement + 1 · mask 0x3fff = เก็บบิต 0-13</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 25 · CHEAT SHEET ============ -->
+        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 25: สูตรจำก่อนสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM CHEAT SHEET</p>
+            <h2 class="slide-title">สูตรจำก่อนสอบ</h2>
+            <p class="slide-subtitle">รวมคำศัพท์และสูตรสำคัญแบบกระชับ — ทบทวนก่อนสอบในเวลาไม่กี่นาที</p>
+            <div class="cheat-grid mt-6">
+              <div class="cheat-item"><span class="term">lw</span><span class="arrow">→</span><span class="def">Memory → Register (โหลด 4 bytes)</span></div>
+              <div class="cheat-item"><span class="term">sw</span><span class="arrow">→</span><span class="def">Register → Memory (เก็บ 4 bytes)</span></div>
+              <div class="cheat-item"><span class="term">lb / lbu / sb</span><span class="arrow">→</span><span class="def">โหลด 1 byte signed / unsigned · เก็บ 1 byte</span></div>
+              <div class="cheat-item"><span class="term">Word = 4 Bytes</span><span class="arrow">→</span><span class="def">lw/sw 4 bytes · lb/lbu/sb 1 byte</span></div>
+              <div class="cheat-item"><span class="term">add / sub / addi</span><span class="arrow">→</span><span class="def">ตรวจ Overflow</span></div>
+              <div class="cheat-item"><span class="term">addu / addiu / subu</span><span class="arrow">→</span><span class="def">ไม่ตรวจ Overflow (u = Unsigned)</span></div>
+              <div class="cheat-item"><span class="term">sll 1</span><span class="arrow">→</span><span class="def">≈ คูณ 2 (Shift Left)</span></div>
+              <div class="cheat-item"><span class="term">srl 1</span><span class="arrow">→</span><span class="def">≈ หาร 2 (Shift Right Logical)</span></div>
+              <div class="cheat-item"><span class="term">sra</span><span class="arrow">→</span><span class="def">เลื่อนขวา เติมตาม bit เครื่องหมาย</span></div>
+              <div class="cheat-item"><span class="term">and / or / xor / nor</span><span class="arrow">→</span><span class="def">ทีละบิต · nor = NOT(or)</span></div>
+              <div class="cheat-item"><span class="term">andi / ori</span><span class="arrow">→</span><span class="def">AND / OR กับ immediate</span></div>
+              <div class="cheat-item"><span class="term">li</span><span class="arrow">→</span><span class="def">Load Immediate — ใส่ค่าคงที่ลง Register</span></div>
+              <div class="cheat-item"><span class="term">slt / sltu / sltiu</span><span class="arrow">→</span><span class="def">signed / unsigned / immediate-unsigned</span></div>
+              <div class="cheat-item"><span class="term">0x12345678 &amp; 0xf</span><span class="arrow">→</span><span class="def">0x00000008 (เอา 4 บิตล่าง)</span></div>
+              <div class="cheat-item"><span class="term">0x12345678 | 0xf</span><span class="arrow">→</span><span class="def">0x1234567f (4 บิตล่างเป็น f)</span></div>
+              <div class="cheat-item"><span class="term">nor $s2,$s0,$zero</span><span class="arrow">→</span><span class="def">complement ของ $s0 (NOT)</span></div>
+              <div class="cheat-item"><span class="term">2's complement</span><span class="arrow">→</span><span class="def">NOT(x) + 1 เช่น addi $s3,$s2,1</span></div>
+              <div class="cheat-item"><span class="term">mask 0x3fff</span><span class="arrow">→</span><span class="def">เก็บบิต 0-13, ล้างบิต 14-31</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 26 · QUIZ ============ -->
+        <section class="slide-view quiz-slide" data-title="Quiz — แบบทดสอบบท 3 (10 ข้อ)" aria-label="สไลด์ 26: แบบทดสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">QUIZ MODE · 10 QUESTIONS</p>
+            <h2 class="slide-title">แบบทดสอบ บทที่ 3</h2>
+            <p class="slide-subtitle">ตอบคำถามแล้วดูคำอธิบายทันที — ครอบคลุม Memory, Arithmetic, Shift และ Logical</p>
+            <div id="quizC3"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 27 · FLASHCARDS ============ -->
+        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 27: การ์ดทบทวน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · FLASHCARDS</p>
+            <h2 class="slide-title">Flashcards — ทบทวนความรู้</h2>
+            <p class="slide-subtitle">อ่านคำถามแล้วลองตอบในใจก่อน — คลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+
+            <div class="split mt-6" style="grid-template-columns:1fr">
+              <div class="flashcard-wrap">
+                <div class="flashcard" id="flashcard3" role="button" tabindex="0" aria-label="การ์ดคำถาม — คลิกเพื่อพลิก">
+                  <div class="flashcard-face flashcard-front">
+                    <span class="fc-eyebrow">QUESTION</span>
+                    <p class="fc-q" id="fcQ3">—</p>
+                    <span class="flashcard-hint">คลิกเพื่อพลิกการ์ด 🔄</span>
+                  </div>
+                  <div class="flashcard-face flashcard-back">
+                    <span class="fc-eyebrow">ANSWER</span>
+                    <p class="fc-a" id="fcA3">—</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-5 wrap" style="justify-content:center">
+              <button class="btn btn-ghost" id="fcPrev3"><i data-lucide="chevron-left"></i> Previous</button>
+              <span class="chip" id="fcCounter3">1 / 16</span>
+              <button class="btn btn-ghost" id="fcNext3">Next <i data-lucide="chevron-right"></i></button>
+              <button class="btn btn-cyan" id="fcShuffle3"><i data-lucide="shuffle"></i> Shuffle</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 28 · GLOSSARY ============ -->
+        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 28: คำศัพท์">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · GLOSSARY</p>
+            <h2 class="slide-title">Glossary — คำศัพท์ที่ควรรู้</h2>
+            <p class="slide-subtitle">ค้นหาคำศัพท์แบบเรียลไทม์ — คลิกคำศัพท์เพื่อดูความหมาย</p>
+
+            <div class="search-box mt-5">
+              <i data-lucide="search"></i>
+              <input type="search" id="glossarySearch3" placeholder="Search term... (ค้นหาคำศัพท์)" aria-label="ค้นหาคำศัพท์" autocomplete="off" />
+            </div>
+            <p class="text-3 mt-3" style="font-size:13px" id="glossaryCount3">34 คำศัพท์</p>
+            <div class="grid-2 mt-4" id="glossaryList3"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 29 · EXAM ============ -->
+        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — พิมพ์คำตอบ 17 ข้อ" aria-label="สไลด์ 29: ข้อสอบหลังเรียน 17 ข้อ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">POST-LESSON EXAM · 17 QUESTIONS</p>
+            <h2 class="slide-title" id="examHeadTitle">ข้อสอบหลังเรียน <span class="grad-text">17 ข้อ</span></h2>
+            <p class="slide-subtitle" id="examHeadSub">trace โปรแกรม bitwise.asm (ข้อ 1–14) + เขียนคำสั่ง (ข้อ 15–17) — <b class="cyan">พิมพ์คำตอบเอง</b> เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้</p>
+            <div id="quizExam3"></div>
+          </div>
+        </section>
+      </div><!-- /viewport -->
+
+      <!-- ================= BOTTOM BAR ================= -->
+      <footer class="bottombar">
+        <button class="bb-nav-btn" id="prevBtn" aria-label="สไลด์ก่อนหน้า">
+          <i data-lucide="chevron-left"></i><span class="bb-label">ก่อนหน้า</span>
+        </button>
+
+        <div class="bb-center">
+          สไลด์ <b id="bbCounter">1</b> / <b id="bbTotal">29</b>
+        </div>
+
+        <div class="bb-tools">
+          <button class="icon-btn" id="fullscreenBtn" aria-label="ขยายสไลด์เต็มจอ" title="ขยายสไลด์">
+            <i data-lucide="maximize-2"></i>
+          </button>
+          <button class="icon-btn" id="printSlidesBtn" aria-label="พิมพ์สไลด์ทั้งหมด" title="พิมพ์สไลด์ทั้งหมด">
+            <i data-lucide="printer"></i>
+          </button>
+          <button class="icon-btn" id="printCardsBtn" aria-label="พิมพ์การ์ดสรุป" title="พิมพ์การ์ดสรุป">
+            <i data-lucide="file-output"></i>
+          </button>
+        </div>
+
+        <button class="bb-nav-btn next" id="nextBtn" aria-label="สไลด์ถัดไป">
+          <span class="bb-label">ถัดไป</span><i data-lucide="chevron-right"></i>
+        </button>
+      </footer>
+
+    </main>
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ================= DRAWER BACKDROP ================= -->
+<div id="drawerBackdrop" aria-hidden="true"></div>
+
+<!-- ================= NOTES PANEL ================= -->
+<aside class="notes-panel" id="notesPanel" aria-label="บันทึกย่อ">
+  <div class="flex items-center justify-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div>
+      <b style="font-size:15px">📝 บันทึกย่อ (Notes)</b>
+      <p class="text-3" style="font-size:12px" id="notesLabel">สไลด์ที่กำลังเรียน</p>
+    </div>
+    <button class="icon-btn" id="notesCloseBtn" aria-label="ปิดบันทึกย่อ"><i data-lucide="x"></i></button>
+  </div>
+  <textarea id="notesTextarea" placeholder="เขียนสิ่งที่ต้องจำจากสไลด์นี้...&#10;เช่น:&#10;- lw = Memory→Register · sw = Register→Memory&#10;- add/addi/sub ตรวจ Overflow · addu/addiu/subu ไม่ตรวจ&#10;- sll ≈ ×2 · srl ≈ ÷2 · sra เติมตามเครื่องหมาย&#10;- nor $s2,$s0,$zero = complement" aria-label="บันทึกย่อ"></textarea>
+  <div class="text-3" style="padding:10px 20px 14px;font-size:12px;border-top:1px solid var(--border)">
+    💾 บันทึกอัตโนมัติลงในเครื่องของคุณ (localStorage)
+  </div>
+</aside>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= COMPLETION OVERLAY ================= -->
+<div id="completionOverlay" role="dialog" aria-modal="true" aria-label="จบบทเรียน">
+  <div class="card center" style="max-width:440px;position:relative;padding:40px 32px;z-index:1">
+    <div style="font-size:56px" class="float-y">🎉</div>
+    <h2 class="slide-title mt-4" style="font-size:28px">Chapter Complete!</h2>
+    <p class="text-2 mt-2" id="completionMsg">คุณเรียนครบทุกสไลด์แล้ว — ยอดเยี่ยมมาก! <b class="grad-text">Keep Learning!</b></p>
+    <div class="grid-3 mt-5" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneSlides">29</b><p class="text-3" style="font-size:12px">สไลด์</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneScore">–</b><p class="text-3" style="font-size:12px">คะแนน Quiz</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px">100%</b><p class="text-3" style="font-size:12px">ความคืบหน้า</p></div>
+    </div>
+    <div class="flex items-center gap-3 mt-6 wrap" style="justify-content:center">
+      <button class="btn btn-ghost" id="completionCloseBtn">ปิด 🎊</button>
+      <button class="btn btn-primary" id="completionRestartBtn"><i data-lucide="rotate-ccw"></i> เรียนใหม่อีกครั้ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRINT AREA ================= -->
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- App scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Interactive Digital Textbook — Computer Architecture / MIPS Instruction Representation" />
+  <title>CA · บทที่ 4 — MIPS Instruction Representation</title>
+
+  <!-- App styles — โหลดก่อนเสมอ (สำคัญต่อการแสดงผล) -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS (Play CDN) — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- ส่วนประกอบเคลื่อนไหวเฉพาะ Com Arch บท 4 -->
+  <style>
+    /* ---------- Levels of Representation (slide 2) ---------- */
+    .levels { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 560px; margin: 0 auto; }
+    .levels .lvl {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 22px; text-align: center; width: 100%;
+    }
+    .levels .lvl b { font-size: 15px; }
+    .levels .lvl p { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+    .levels .lvl:nth-child(1) { border-color: rgba(56,189,248,.45); }
+    .levels .lvl:nth-child(5) { border-color: rgba(52,211,153,.45); }
+    .levels .lvl-arrow { color: var(--cyan); font-weight: 800; font-size: 16px; padding: 4px 0; }
+    .levels .lvl-arrow span { font-size: 11px; color: var(--text-3); font-weight: 600; display: block; }
+
+    /* ---------- Memory block (slide 3) ---------- */
+    .mem-block { max-width: 420px; margin: 0 auto; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .mem-block .mb-cap { background: var(--card-2); padding: 8px 14px; font-size: 12.5px; font-weight: 700; text-align: center; border-bottom: 1px solid var(--border); }
+    .mem-row { display: flex; align-items: center; gap: 10px; padding: 7px 14px; font-family: Consolas, Monaco, monospace; font-size: 12.5px; border-bottom: 1px dashed var(--border); }
+    .mem-row:last-child { border-bottom: none; }
+    .mem-row .adr { color: var(--text-3); width: 74px; flex-shrink: 0; }
+    .mem-row .tag { margin-left: auto; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; }
+    .mem-row.ins .tag { background: rgba(56,189,248,.15); color: var(--cyan); }
+    .mem-row.data .tag { background: rgba(52,211,153,.15); color: var(--success); }
+
+    /* ---------- Bit field layout (slides 5-10) ---------- */
+    .fields { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+    .fields .f {
+      border-radius: 8px; padding: 6px 8px; text-align: center; min-width: 64px;
+      font-family: Consolas, Monaco, monospace; font-size: 12px; cursor: default;
+      transition: transform .15s;
+    }
+    .fields .f:hover { transform: translateY(-3px); }
+    .fields .f b { display: block; font-size: 12px; letter-spacing: .06em; }
+    .fields .f span { display: block; font-size: 10.5px; opacity: .85; margin-top: 2px; }
+    .f-op { background: rgba(56,189,248,.16); border: 1px solid rgba(56,189,248,.55); color: #7dd3fc; }
+    .f-rs { background: rgba(244,114,182,.16); border: 1px solid rgba(244,114,182,.55); color: #f9a8d4; }
+    .f-rt { background: rgba(251,191,36,.16); border: 1px solid rgba(251,191,36,.55); color: #fcd34d; }
+    .f-rd { background: rgba(52,211,153,.16); border: 1px solid rgba(52,211,153,.55); color: #6ee7b7; }
+    .f-sh { background: rgba(192,132,252,.16); border: 1px solid rgba(192,132,252,.55); color: #d8b4fe; }
+    .f-fu { background: rgba(248,113,113,.16); border: 1px solid rgba(248,113,113,.55); color: #fca5a5; }
+    .f-im { background: rgba(251,191,36,.16); border: 1px solid rgba(251,191,36,.55); color: #fcd34d; }
+    .f-tg { background: rgba(52,211,153,.16); border: 1px solid rgba(52,211,153,.55); color: #6ee7b7; }
+    .fields .f.f-hex { min-width: 118px; background: rgba(56,189,248,.22); border: 2px solid var(--cyan); color: #bae6fd; }
+
+    /* ---------- ตาราง format ---------- */
+    .fmt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .fmt-table th, .fmt-table td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; }
+    .fmt-table th { background: var(--card-2); font-weight: 700; }
+    .fmt-table td { color: var(--text-2); }
+    .fmt-table code { font-family: Consolas, Monaco, monospace; color: var(--cyan); font-size: 12px; }
+    .fmt-table .r { color: #f9a8d4; font-weight: 800; }
+    .fmt-table .i { color: #fcd34d; font-weight: 800; }
+    .fmt-table .j { color: #6ee7b7; font-weight: 800; }
+
+    /* ---------- สูตรคำนวณ ---------- */
+    .formula {
+      background: rgba(0,0,0,.42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 18px; font-family: Consolas, Monaco, monospace; font-size: 15px;
+      text-align: center; margin: 8px auto; max-width: 560px; line-height: 1.7;
+    }
+    .formula .hl { color: var(--cyan); font-weight: 800; }
+    .formula .sm { color: var(--text-3); font-size: 12px; }
+
+    /* ---------- คำสั่ง MIPS ---------- */
+    .asm-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; font-family: Consolas, Monaco, monospace; font-size: 13px;
+      line-height: 1.8; overflow-x: auto; white-space: pre;
+    }
+    .asm-code .dir { color: #c084fc; }
+    .asm-code .ins { color: #60a5fa; }
+    .asm-code .reg { color: #f87171; }
+    .asm-code .num { color: #fbbf24; }
+    .asm-code .cmt { color: var(--text-3); font-style: italic; }
+
+    /* ---------- ตาราง trace ---------- */
+    .trace-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .trace-table th, .trace-table td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; }
+    .trace-table th { background: var(--card-2); font-weight: 700; font-size: 12px; }
+    .trace-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+    .trace-table tr:hover td { background: rgba(56, 189, 248, .06); }
+    .trace-table .ans { color: var(--success); font-weight: 800; }
+
+    /* ---------- ขั้นตอน ---------- */
+    .step-list { display: flex; flex-direction: column; gap: 8px; }
+    .step-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text-2);
+    }
+    .step-box b { color: var(--text); }
+    .step-box code { font-family: Consolas, Monaco, monospace; color: var(--cyan); }
+
+    /* ---------- fib stack demo (slide 18) ---------- */
+    .stack-stage {
+      background: rgba(0,0,0,.35); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; min-height: 150px; position: relative;
+    }
+    .stack-frame {
+      border: 1px solid var(--border); border-radius: 10px; background: var(--card-2);
+      padding: 8px 12px; font-family: Consolas, Monaco, monospace; font-size: 12px;
+      display: flex; align-items: center; gap: 14px; margin-bottom: 6px; flex-wrap: wrap;
+      animation: caFadeIn .35s ease both;
+    }
+    .stack-frame.new { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(56,189,248,.2); }
+    .stack-frame .sf-n { color: var(--cyan); font-weight: 800; }
+    .stack-frame .sf-sp { color: var(--text-2); }
+    .stack-frame .sf-ra { color: #f9a8d4; }
+    .stack-frame .sf-note { color: var(--text-3); font-size: 11px; margin-left: auto; }
+    @keyframes caFadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .stack-status { font-size: 13px; color: var(--text-2); min-height: 20px; margin-top: 10px; }
+
+    /* ---------- ข้อสอบแบบพิมพ์คำตอบ (สร้างโดย app.js) ---------- */
+    .exam-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .exam-input {
+      flex: 1; min-width: 220px;
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; color: var(--text); font-family: Consolas, Monaco, monospace;
+      font-size: 15px; outline: none; transition: border-color .2s;
+    }
+    .exam-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(56, 189, 248, .15); }
+    .exam-feedback {
+      display: flex; gap: 12px; align-items: flex-start;
+      border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
+    }
+    .exam-feedback.ok { border-color: rgba(52, 211, 153, .5); background: rgba(52, 211, 153, .08); }
+    .exam-feedback.bad { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .08); }
+    .exam-feedback .ef-mark { font-size: 22px; line-height: 1.2; }
+    .exam-feedback b { font-size: 15px; }
+    .exam-feedback .ef-your { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+    .exam-feedback .ef-ans { font-size: 13px; color: var(--success); margin-top: 2px; }
+    .exam-feedback code { font-family: Consolas, Monaco, monospace; background: rgba(0,0,0,.35); padding: 2px 8px; border-radius: 6px; color: var(--cyan); }
+
+    /* ---------- กล่องโจทย์ในข้อสอบ (สร้างโดย app.js) ---------- */
+    .exam-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 14px 12px; margin-bottom: 16px;
+      font-family: Consolas, Monaco, monospace; font-size: 12.5px; line-height: 1.7;
+      overflow-x: auto;
+    }
+    .exam-code .exam-code-cap {
+      font-size: 10px; letter-spacing: .14em; font-weight: 800;
+      color: var(--text-3); margin-bottom: 6px; text-transform: uppercase;
+    }
+    .exam-code .exam-code-line.hl {
+      background: rgba(56, 189, 248, .12); border-radius: 6px;
+      padding: 1px 8px; margin: 0 -8px; box-shadow: inset 2px 0 0 var(--cyan);
+    }
+    .exam-code .asm-ins { color: #60a5fa; }
+    .exam-code .asm-reg { color: #f87171; }
+    .exam-code .asm-num { color: #fbbf24; }
+    .exam-code .asm-dir { color: #c084fc; }
+    .exam-code .asm-lab { color: #c084fc; font-weight: 700; }
+
+    @media (max-width: 640px) {
+      .fields .f { min-width: 52px; padding: 5px 6px; font-size: 10.5px; }
+      .fields .f.f-hex { min-width: 96px; }
+    }
+  </style>
+</head>
+<body data-page="chapter" data-chapter="4">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header id="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="เปิดเมนูบทเรียน" title="เมนู">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <div class="brand">
+      <div class="cn-logo" aria-hidden="true">CA</div>
+      <div class="brand-titles">
+        <h1>สถาปัตยกรรมคอมพิวเตอร์</h1>
+        <p id="headerChapterLabel">MIPS Instruction Representation · บทที่ 4</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="icon-btn" id="homeBtn" aria-label="กลับไปเมนูหลัก" title="เมนูหลัก">
+        <i data-lucide="home"></i>
+      </button>
+      <button class="icon-btn" id="notesBtn" aria-label="เปิดบันทึกย่อ" title="บันทึกย่อ (Notes)">
+        <i data-lucide="notebook-pen"></i>
+      </button>
+
+      <div class="header-progress" aria-label="ความคืบหน้า">
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="headerProgressBar">
+          <div class="progress-fill" id="headerProgressFill"></div>
+        </div>
+        <span class="progress-count" id="headerProgressCount">1 / 24</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= SHELL ================= -->
+  <div class="shell">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar" aria-label="เมนูบทเรียน">
+      <div class="sidebar-head">
+        <div class="sidebar-head-title">
+          <h2 id="sidebarChapterTitle">เมนูบทที่ 4</h2>
+          <p id="sidebarChapterSub">หัวข้อในสัปดาห์นี้ · 24 หัวข้อ</p>
+        </div>
+        <button class="icon-btn sidebar-close" id="sidebarCloseBtn" aria-label="ปิดเมนูบทเรียน" title="ปิดเมนู">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="sidebar-info">
+        <i data-lucide="info"></i>
+        <span>คลิกหัวข้อหรือสไลด์เพื่อข้ามไปได้เลย<br />เรียนทีละสไลด์เพื่อเก็บเนื้อหาให้ครบ</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav" aria-label="สารบัญสไลด์"></nav>
+      <div class="sidebar-foot">
+        <div class="sf-top"><span>ความคืบหน้า</span><b id="sidebarPct">0%</b></div>
+        <div class="progress-track"><div class="progress-fill" id="sidebarProgressFill"></div></div>
+        <p class="mt-2 text-3" style="font-size:12px" id="sidebarDone">ยังไม่ได้เรียนสไลด์ใดเลย — เริ่มที่ Cover ได้เลย!</p>
+      </div>
+    </aside>
+
+    <!-- ================= STAGE ================= -->
+    <main class="stage">
+
+      <div class="slide-viewport" id="viewport">
+        <!-- ============ SLIDE 1 · COVER ============ -->
+        <section class="slide-view" data-title="Cover — บทที่ 4: MIPS Instruction Representation" aria-label="สไลด์ 1: เปิดบทเรียน">
+          <div class="slide-inner">
+            <div class="center">
+              <div class="cn-logo float-y" style="width:74px;height:74px;font-size:28px;border-radius:22px;margin:0 auto 18px">CA</div>
+              <p class="slide-eyebrow" style="justify-content:center">COMPUTER ARCHITECTURE · CHAPTER 4</p>
+              <h2 class="slide-title" style="font-size:clamp(28px,5vw,52px);text-align:center">
+                MIPS <span class="grad-text">Instruction Representation</span>
+              </h2>
+              <p class="slide-subtitle" style="text-align:center;margin:6px auto 0;max-width:680px">
+                คำสั่ง Assembly หนึ่งบรรทัด ถูกแปลงเป็นเลข 32 บิต (0/1) ได้อย่างไร
+                — Stored-Program · R/I/J Format · Branch/Jump Addressing · Disassembly · MAL vs TAL
+                — จบด้วยโปรแกรม Fibonacci (fib.asm) ที่ออกข้อสอบท้ายบท 20 ข้อ
+              </p>
+
+              <div class="stat-chips" style="justify-content:center;margin-top:24px">
+                <span class="stat-chip"><i data-lucide="layers"></i> 24 Slides</span>
+                <span class="stat-chip"><i data-lucide="help-circle"></i> 10 Quiz</span>
+                <span class="stat-chip"><i data-lucide="square-stack"></i> 18 Flashcards</span>
+                <span class="stat-chip"><i data-lucide="book-marked"></i> 25 Glossary</span>
+              </div>
+
+              <button class="btn btn-primary mt-6" id="startBtn" style="font-size:16px;padding:14px 30px">
+                Start Learning <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 2 · ภาพรวม ============ -->
+        <section class="slide-view" data-title="ภาพรวม — ทำไมต้องเรียนเรื่องนี้" aria-label="สไลด์ 2: สิ่งที่จะเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER OVERVIEW</p>
+            <h2 class="slide-title">ทำไมต้องเรียนเรื่องนี้?</h2>
+            <p class="slide-subtitle">คุณเขียนโปรแกรมเป็นภาษา C แต่คอมพิวเตอร์เข้าใจแค่เลข 0 กับ 1 — ภาษา C แปลงไปเป็นเลข 0-1 ได้อย่างไร?</p>
+
+            <div class="levels mt-6">
+              <div class="lvl"><b>ภาษา C</b><p>เข้าใจง่ายสำหรับคน</p></div>
+              <div class="lvl-arrow">↓ <span>ผ่าน Compiler</span></div>
+              <div class="lvl"><b>Assembly (MIPS)</b><p>lw, sw, add ... — ยังอ่านเข้าใจได้</p></div>
+              <div class="lvl-arrow">↓ <span>ผ่าน Assembler</span></div>
+              <div class="lvl"><b>Machine Language</b><p>ตัวเลข 0 กับ 1 ล้วน ๆ — CPU อ่านแล้วทำงาน</p></div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>หัวใจของบทนี้</b>Assembly หนึ่งบรรทัด ถูกแปลงเป็นเลข 32 บิต (0/1) ได้อย่างไร — นี่คือขั้นตอนสุดท้ายก่อนฮาร์ดแวร์ทำงาน</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 3 · STORED-PROGRAM ============ -->
+        <section class="slide-view" data-title="Stored-Program Concept" aria-label="สไลด์ 3: Stored-Program Concept">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">BIG IDEA</p>
+            <h2 class="slide-title">Stored-Program Concept — โปรแกรมถูกเก็บเหมือนข้อมูล</h2>
+            <p class="slide-subtitle">หลักการสำคัญ 2 ข้อ ที่เป็นรากฐานของคอมพิวเตอร์ยุคใหม่ทุกเครื่อง</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="hash" class="cyan"></i>ข้อ 1 · คำสั่งก็คือตัวเลข</h3><p class="card-text small mt-2">Instruction (คำสั่ง) ไม่ต่างจากตัวเลข 5 หรือ 100 — เพียงแต่ตัวเลขนี้ถูกตีความว่า "ให้ทำอะไร"</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="database" class="cyan"></i>ข้อ 2 · เก็บใน RAM ตัวเดียวกับข้อมูล</h3><p class="card-text small mt-2">โปรแกรมทั้งโปรแกรมเก็บในหน่วยความจำเดียวกันกับข้อมูล — ไม่ต้องแยก RAM สำหรับโปรแกรมและข้อมูล</p></div>
+            </div>
+
+            <div class="grid-2 mt-5" style="align-items:start">
+              <div class="mem-block">
+                <div class="mb-cap">Memory (RAM) — เก็บได้ทั้ง 2 อย่าง</div>
+                <div class="mem-row ins"><span class="adr">0x00400000</span>000000 01001 01010<span class="tag">คำสั่ง</span></div>
+                <div class="mem-row ins"><span class="adr">0x00400004</span>000011 00000 00000<span class="tag">คำสั่ง</span></div>
+                <div class="mem-row ins"><span class="adr">0x00400008</span>100011 01001 00000<span class="tag">คำสั่ง</span></div>
+                <div class="mem-row data"><span class="adr">0x10010000</span>0000 0000 0000 0101<span class="tag">ข้อมูล</span></div>
+                <div class="mem-row data"><span class="adr">0x10010004</span>0000 0000 0000 0110<span class="tag">ข้อมูล</span></div>
+                <div class="mem-row data"><span class="adr">0x10010008</span>0000 0000 0000 0111<span class="tag">ข้อมูล</span></div>
+              </div>
+              <div class="step-list">
+                <div class="step-box"><b>เปรียบเทียบง่าย ๆ</b> — ตู้ล็อกเกอร์ที่มีเลขกำกับ (address) บางล็อกเกอร์เก็บ "ของ" (data) บางล็อกเกอร์เก็บ "ใบสั่งงาน" (instruction) แต่ทั้งสองแบบก็แค่ <b>"กระดาษที่มีตัวเลข"</b> — เก็บในตู้เดียวกันได้หมด</div>
+                <div class="step-box"><b>PC (Program Counter)</b> — ตัวนับพิเศษที่คอยจำว่า "ตอนนี้กำลังรันคำสั่งอยู่ที่ address ไหน" เหมือนนิ้วที่ชี้บรรทัดที่กำลังอ่าน</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 4 · CONSEQUENCES ============ -->
+        <section class="slide-view" data-title="ผลที่ตามมา (Consequences)" aria-label="สไลด์ 4: ผลที่ตามมา">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CONSEQUENCES</p>
+            <h2 class="slide-title">เมื่อโปรแกรมเป็นแค่ตัวเลข — ผลที่ตามมา</h2>
+            <p class="slide-subtitle">จากหลักการ Stored-Program มีผลลัพธ์สำคัญ 2 อย่างที่ต้องรู้</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="map-pin" class="cyan"></i>1 · ทุกอย่างมีที่อยู่ (Address)</h3>
+                <p class="card-text small mt-2">ทั้งคำสั่งและข้อมูลมี address หมด และมี <b class="cyan">PC</b> ที่ชี้ว่า "ตอนนี้อยู่ที่ไหน" — เหมือนนิ้วชี้บรรทัดในหนังสือ</p>
+              </div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="refresh-cw" class="cyan"></i>2 · Backward Compatible</h3>
+                <p class="card-text small mt-2">โปรแกรมที่คอมไพล์แล้ว (binary) ผูกติดกับชุดคำสั่งของ CPU รุ่นนั้น — CPU รุ่นใหม่ต้องรองรับคำสั่งรุ่นเก่าด้วย ไม่งั้นโปรแกรมเก่าจะรันไม่ได้</p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำง่าย ๆ</b>คำสั่งคอมพิวเตอร์ไม่ใช่อะไรลึกลับ — มันคือตัวเลข 32 บิตที่ถูกแบ่งเป็นช่อง ๆ ตามกติกาที่ตกลงกันไว้ล่วงหน้า และเพราะมันเป็นแค่ตัวเลข จึงเก็บในหน่วยความจำเดียวกับข้อมูลได้</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 5 · คำสั่ง = ตัวเลข ============ -->
+        <section class="slide-view" data-title="คำสั่งกลายเป็นตัวเลขได้อย่างไร" aria-label="สไลด์ 5: คำสั่ง = ตัวเลข">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">HOW INSTRUCTIONS BECOME NUMBERS</p>
+            <h2 class="slide-title">คำสั่งกลายเป็นตัวเลขได้อย่างไร?</h2>
+            <p class="slide-subtitle">ข้อมูลทุกอย่างในคอมพิวเตอร์จัดเป็นก้อน 32 บิต (word) — MIPS จึงเลือกให้คำสั่งมีขนาด 32 บิตเท่ากัน เพื่อความเรียบง่าย</p>
+
+            <div class="card mt-6" style="padding:20px">
+              <b style="font-size:15px">1 Word = 32 Bits</b>
+              <div class="bits-line mt-3" style="justify-content:center">
+                <span class="b">1</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">1</span><span class="b">0</span><span class="b">1</span><span class="b">0</span>
+                <span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">1</span><span class="b">0</span><span class="b">0</span><span class="b">0</span>
+                <span class="b">0</span><span class="b">0</span><span class="b">1</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span>
+                <span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span><span class="b">0</span>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-5">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="clipboard-list" class="cyan"></i>แบ่งเป็นช่อง (Fields)</h3><p class="card-text small mt-2">เมื่อคำสั่งมีขนาดคงที่ 32 บิต เราก็แบ่งเป็น "ช่อง" แต่ละช่องบอกข้อมูลคนละอย่าง — คล้ายแบบฟอร์มที่มีช่องกรอกชื่อ, ช่องวันเกิด, ช่องที่อยู่</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="layout-grid" class="cyan"></i>3 รูปแบบ (Formats)</h3><p class="card-text small mt-2">MIPS มีรูปแบบคำสั่ง 3 แบบ: <b class="cyan">R-Format</b> (Register) · <b class="cyan">I-Format</b> (Immediate) · <b class="cyan">J-Format</b> (Jump)</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 6 · R-FORMAT ============ -->
+        <section class="slide-view" data-title="R-Format — โครงสร้างและความหมาย" aria-label="สไลด์ 6: R-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 1/3</p>
+            <h2 class="slide-title">R-Format — ใช้กับคำสั่งที่ทำงานกับ Register ล้วน ๆ</h2>
+            <p class="slide-subtitle">เช่น add, sub, slt, sll — แบ่ง 32 บิตเป็น 6 ช่อง: opcode + rs + rt + rd + shamt + funct = 6+5+5+5+5+6 = 32 bits</p>
+
+            <div class="fields mt-5">
+              <div class="f f-op"><b>opcode</b><span>6 บิต</span></div>
+              <div class="f f-rs"><b>rs</b><span>5 บิต</span></div>
+              <div class="f f-rt"><b>rt</b><span>5 บิต</span></div>
+              <div class="f f-rd"><b>rd</b><span>5 บิต</span></div>
+              <div class="f f-sh"><b>shamt</b><span>5 บิต</span></div>
+              <div class="f f-fu"><b>funct</b><span>6 บิต</span></div>
+            </div>
+
+            <div class="fmt-table mt-5">
+              <table>
+                <tr><th style="width:90px">ช่อง</th><th>ความหมาย</th><th style="width:200px">จำแบบประโยค</th></tr>
+                <tr><td class="r">opcode</td><td>บอกกลุ่มคำสั่งคร่าว ๆ — R-format มีค่าเป็น 0 เสมอ</td><td>—</td></tr>
+                <tr><td class="r">rs</td><td>Register ตัวตั้งต้น (operand แรก)</td><td rowspan="2">"เอา rs กับ rt มาบวกกัน"</td></tr>
+                <tr><td class="r">rt</td><td>Register ตัวที่สอง (operand ที่สอง)</td></tr>
+                <tr><td class="r">rd</td><td>Register ปลายทาง — เก็บผลลัพธ์</td><td>"แล้วเก็บผลไว้ที่ rd"</td></tr>
+                <tr><td class="r">shamt</td><td>Shift Amount — ใช้กับคำสั่ง shift (sll, srl) คำสั่งอื่นใส่ 0</td><td>—</td></tr>
+                <tr><td class="r">funct</td><td>ใช้ร่วมกับ opcode ระบุคำสั่งที่แน่นอน เช่น add, sub</td><td>—</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-note mt-5">
+              <i data-lucide="info"></i>
+              <div><b>ทำไม 5 บิต / 6 บิต?</b> 5 บิตแทนเลข 0–31 ได้พอดี — MIPS มี register 32 ตัว (พอดีเป๊ะ!) ส่วน 6 บิตแทนเลข 0–63 ได้</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 7 · ตัวอย่าง R-FORMAT ============ -->
+        <section class="slide-view" data-title="ตัวอย่าง R-Format — add $8,$9,$10 → 0x012A4020" aria-label="สไลด์ 7: ตัวอย่าง R-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WORKED EXAMPLE</p>
+            <h2 class="slide-title">ตัวอย่างจริง: <code style="font-family:Consolas,monospace;color:var(--cyan)">add $8,$9,$10</code> → <code style="font-family:Consolas,monospace;color:var(--cyan)">0x012A4020</code></h2>
+            <p class="slide-subtitle">แปลว่า $8 = $9 + $10 — ไล่ทีละช่อง แล้วต่อเป็นเลขฐาน 16</p>
+
+            <div class="fmt-table mt-5">
+              <table>
+                <tr><th>ช่อง</th><th>ค่า</th><th>ความหมาย</th></tr>
+                <tr><td class="r">opcode</td><td><code>0</code></td><td>เป็น R-format</td></tr>
+                <tr><td class="r">rs</td><td><code>9</code></td><td>operand แรก ($9)</td></tr>
+                <tr><td class="r">rt</td><td><code>10</code></td><td>operand ที่สอง ($10)</td></tr>
+                <tr><td class="r">rd</td><td><code>8</code></td><td>ปลายทาง ($8)</td></tr>
+                <tr><td class="r">shamt</td><td><code>0</code></td><td>ไม่ใช่ shift</td></tr>
+                <tr><td class="r">funct</td><td><code>32</code></td><td>คำสั่ง add</td></tr>
+              </table>
+            </div>
+
+            <div class="fields mt-5">
+              <div class="f f-op"><b>000000</b><span>opcode=0</span></div>
+              <div class="f f-rs"><b>01001</b><span>rs=9</span></div>
+              <div class="f f-rt"><b>01010</b><span>rt=10</span></div>
+              <div class="f f-rd"><b>01000</b><span>rd=8</span></div>
+              <div class="f f-sh"><b>00000</b><span>shamt=0</span></div>
+              <div class="f f-fu"><b>100000</b><span>funct=32</span></div>
+            </div>
+
+            <div class="step-list mt-5">
+              <div class="step-box"><b>ขั้นที่ 1</b> ต่อทุกช่องเป็นเลขฐาน 2: <code>000000 01001 01010 01000 00000 100000</code></div>
+              <div class="step-box"><b>ขั้นที่ 2</b> จับกลุ่ม 4 บิต: <code>0000 0001 0010 1010 0100 0000 0010 0000</code></div>
+              <div class="step-box"><b>ขั้นที่ 3</b> แปลงแต่ละกลุ่ม 4 บิตเป็นเลขฐาน 16: <code>0 1 2 A 4 0 2 0</code> → <b class="cyan">0x012A4020</b> — นี่คือภาษาเครื่องตัวจริงที่ CPU อ่าน!</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 8 · I-FORMAT ============ -->
+        <section class="slide-view" data-title="I-Format — โครงสร้าง" aria-label="สไลด์ 8: I-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2/3</p>
+            <h2 class="slide-title">I-Format — Immediate</h2>
+            <p class="slide-subtitle">คำสั่งอย่าง addi $t0,$t1,100 ต้องการ "เลขคงที่" (100) ไม่ใช่ register ตัวที่สาม — เลขคงที่มักใหญ่เกิน 5 บิต จึงต้องมีรูปแบบใหม่</p>
+
+            <div class="fields mt-5">
+              <div class="f f-op"><b>opcode</b><span>6 บิต</span></div>
+              <div class="f f-rs"><b>rs</b><span>5 บิต</span></div>
+              <div class="f f-rt"><b>rt</b><span>5 บิต</span></div>
+              <div class="f f-im"><b>immediate</b><span>16 บิต</span></div>
+            </div>
+
+            <div class="grid-2 mt-5">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="unlock" class="cyan"></i>opcode บอกคำสั่งได้ครบ</h3><p class="card-text small mt-2">opcode ยังอยู่ตำแหน่งเดิม (บิตแรก) เหมือน R-format — ฮาร์ดแวร์ตรวจสอบ opcode ก่อนเสมอ ไม่ต้องรู้ล่วงหน้าว่าเป็น format ไหน แต่ I-format ไม่ต้องมี funct ช่วย</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="minus-circle" class="cyan"></i>immediate 16 บิต signed</h3><p class="card-text small mt-2">ค่าประมาณ -32,768 ถึง 32,767 (ติดลบได้) — เก็บเลขคงที่ / offset / branch displacement</p></div>
+            </div>
+
+            <div class="tip-box tip-note mt-5">
+              <i data-lucide="info"></i>
+              <div><b>จำไว้</b>I-Format = <b>addi, lw, sw, beq, bne</b> — คำสั่งที่มี Immediate/Offset/Branch displacement</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 9 · ตัวอย่าง I-FORMAT ============ -->
+        <section class="slide-view" data-title="ตัวอย่าง I-Format — addi $21,$22,-50" aria-label="สไลด์ 9: ตัวอย่าง I-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">WORKED EXAMPLE</p>
+            <h2 class="slide-title">ตัวอย่างจริง: <code style="font-family:Consolas,monospace;color:var(--cyan)">addi $21,$22,-50</code></h2>
+            <p class="slide-subtitle">แปลว่า $21 = $22 + (-50) — สังเกตว่า addi ใช้ immediate จึงเป็น I-Format</p>
+
+            <div class="fmt-table mt-5">
+              <table>
+                <tr><th>ช่อง</th><th>ค่า</th><th>หมายเหตุ</th></tr>
+                <tr><td class="i">opcode</td><td><code>8</code></td><td>addi — บอกคำสั่งได้ครบในตัวเอง</td></tr>
+                <tr><td class="i">rs</td><td><code>22</code></td><td>register ต้นทาง ($22)</td></tr>
+                <tr><td class="i">rt</td><td><code>21</code></td><td>register ปลายทาง ($21) — ใน I-format rt รับผลลัพธ์</td></tr>
+                <tr><td class="i">immediate</td><td><code>-50</code></td><td>เลขคงที่ 16 บิต (ในรูป two's complement = 0xFFCE)</td></tr>
+              </table>
+            </div>
+
+            <div class="fields mt-5">
+              <div class="f f-op"><b>001000</b><span>opcode=8</span></div>
+              <div class="f f-rs"><b>10110</b><span>rs=22</span></div>
+              <div class="f f-rt"><b>10101</b><span>rt=21</span></div>
+              <div class="f f-im"><b>1111111111001110</b><span>imm = -50</span></div>
+            </div>
+
+            <div class="step-list mt-5">
+              <div class="step-box"><b>ลำดับการอ่าน</b> ต่างจาก R-format: ใน addi ช่องที่สอง (rs) คือค่าที่เอามาบวก ช่องที่สาม (rt) คือที่เก็บผลลัพธ์</div>
+              <div class="step-box"><b>ตัวอย่างอีกอัน</b> <code>lw $t0,4($s1)</code> — rs = $s1 (base), immediate = 4 (offset) ส่วน rt = $t0 ปลายทางที่โหลดมาใส่</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 10 · J-FORMAT ============ -->
+        <section class="slide-view" data-title="J-Format — โครงสร้าง" aria-label="สไลด์ 10: J-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 3/3</p>
+            <h2 class="slide-title">J-Format — Jump</h2>
+            <p class="slide-subtitle">การ "jump" ต้องระบุตำแหน่งปลายทางแบบเต็ม ๆ ซึ่งต้องการบิตเยอะ — จึงยุบทุกช่องที่เหลือเป็นช่อง target address ใหญ่ช่องเดียว</p>
+
+            <div class="fields mt-5">
+              <div class="f f-op"><b>opcode</b><span>6 บิต</span></div>
+              <div class="f f-tg"><b>target address</b><span>26 บิต</span></div>
+            </div>
+
+            <div class="grid-2 mt-5">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="corner-up-right" class="cyan"></i>j label</h3><p class="card-text small mt-2">Jump — กระโดดไปที่ตำแหน่งของ label ทันที ไม่สนใจเงื่อนไข</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="link-2" class="cyan"></i>jal function</h3><p class="card-text small mt-2">Jump And Link — เก็บ address กลับไว้ที่ <b class="cyan">$ra</b> ก่อน แล้วกระโดดไปฟังก์ชัน (ใช้เรียก procedure)</p></div>
+            </div>
+
+            <div class="tip-box tip-remember mt-5">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำ 3 ตัวนี้ให้ขึ้นใจ</b> R = Register · I = Immediate · J = Jump — opcode = 0 คือ R-format, opcode 2/3 คือ J-format, นอกนั้นคือ I-format</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 11 · BRANCH ============ -->
+        <section class="slide-view" data-title="Branch — PC-Relative Addressing" aria-label="สไลด์ 11: Branch ญาติ PC">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ADDRESSING · BRANCH</p>
+            <h2 class="slide-title">Branch ใช้ที่อยู่แบบสัมพัทธ์ (PC-Relative)</h2>
+            <p class="slide-subtitle">beq/bne ใช้ I-format มี immediate แค่ 16 บิต — ไม่พอเก็บ address เต็ม 32 บิต แล้วจะกระโดดยังไง? ตอบ: เก็บเป็น "จำนวนคำสั่งที่ต้องข้าม" แทน</p>
+
+            <div class="formula mt-5">
+              ถ้าไม่ branch: PC ใหม่ = <span class="hl">PC + 4</span><br />
+              ถ้า branch: PC ใหม่ = <span class="hl">(PC + 4) + (immediate × 4)</span>
+            </div>
+
+            <div class="grid-2 mt-5">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="help-circle" class="cyan"></i>ทำไมต้องคูณ 4?</h3><p class="card-text small mt-2">คำสั่งแต่ละตัวมีขนาด 4 bytes เท่ากันเป๊ะ → immediate เก็บเป็น "จำนวนคำสั่ง" แทน "จำนวน bytes" → กระโดดได้ไกลขึ้น 4 เท่าโดยใช้บิตเท่าเดิม</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="list-ordered" class="cyan"></i>ตัวอย่าง (จับมือคิด)</h3>
+                <div class="asm-code mt-2" style="font-size:12px">0x00400020  beq $t0,$t1,L<span class="cmt">  # L อยู่ถัดไป 2 คำสั่ง → imm = 2</span>
+0x00400024  add $t0,$t1,$t2
+0x00400028  sub $t3,$t4,$t5
+0x0040002c  L:  sw $t0,0($s1)</div>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> beq อยู่ที่ <code>0x00400020</code> — คำสั่งเองกิน 4 bytes → ตัวต่อไปคือ <code>PC + 4 = 0x00400024</code></div>
+                  <div class="step-box"><b>2.</b> imm = 2 หมายถึง "ข้ามไปอีก 2 คำสั่ง" → ขยับเพิ่ม <code>2 × 4 = 8</code> (เพราะแต่ละคำสั่ง = 4 bytes)</div>
+                  <div class="step-box"><b>3.</b> บวกเลข hex: <code>0x00400024 + 8</code> — ดูหลักสุดท้าย <code>24 + 8 = 2c</code> (เพราะ 0x24 = 36, 36+8 = 44 = 0x2c)</div>
+                  <div class="step-box"><b>4.</b> ได้ <b class="cyan">0x0040002c</b> = ตำแหน่ง L พอดี ✓ (PC ใหม่ = (PC+4) + imm×4)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 12 · JUMP ============ -->
+        <section class="slide-view" data-title="Jump — Absolute Addressing" aria-label="สไลด์ 12: Jump สัมบูรณ์">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ADDRESSING · JUMP</p>
+            <h2 class="slide-title">Jump ใช้ที่อยู่แบบสัมบูรณ์ (Absolute)</h2>
+            <p class="slide-subtitle">J-format มี target แค่ 26 บิต แต่ address จริงมี 32 บิต — ขาดไป 6 บิต แก้ด้วย 2 เทคนิค</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="check-check" class="cyan"></i>เทคนิค 1 · ตัด 2 บิตท้าย</h3><p class="card-text small mt-2">คำสั่งอยู่ที่ address ที่หาร 4 ลงตัวเสมอ (word-aligned) → 2 บิตท้ายเป็น <b class="cyan">00</b> เสมอ ไม่ต้องเก็บ</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="copy" class="cyan"></i>เทคนิค 2 · ยืม PC บน 4 บิต</h3><p class="card-text small mt-2">4 บิตบนสุด หยิบจาก PC ปัจจุบันเลย (ไม่ได้เก็บในคำสั่ง)</p></div>
+            </div>
+
+            <div class="formula mt-5">
+              PC ใหม่ = <span class="hl">{ 4 บิตบนของ PC เดิม , target 26 บิต , 00 }</span> = ครบ 32 บิต
+            </div>
+
+            <div class="card mt-5" style="padding:20px">
+              <b style="font-size:14.5px">ตัวอย่าง: <code style="color:var(--cyan);font-family:Consolas,monospace">j 0x00400044</code> (j อยู่ที่ 0x00400030)</b>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ขั้น 1</b> เขียน target เป็นเลขฐาน 2 (32 บิต): <code>0x00400044</code> = <code>0000 0000 0100 0000 0000 0000 0100 0100</code></div>
+                <div class="step-box"><b>ขั้น 2</b> 2 บิตท้ายเป็น <code>00</code> เสมอ (word-aligned) → ตัดทิ้งได้ เหลือ <b class="cyan">0x00100011</b> (26 บิต) เก็บลงในคำสั่ง</div>
+                <div class="step-box"><b>ขั้น 3</b> PC ปัจจุบัน 0x00400030 → 4 บิตบนสุด = <code>0</code> (เอามาต่อหน้า ไม่ต้องเก็บ)</div>
+                <div class="step-box"><b>ขั้น 4</b> ประกอบกลับ: <code>0</code> + <code>0x00100011</code> + <code>00</code> = <b class="cyan">0x00400044</b> ✓</div>
+                <div class="step-box" style="border-bottom:none"><b>จำง่าย ๆ</b> "หาร 4" = ตัด 2 บิตท้ายออก เพราะ address ลงท้าย 00 เสมอ — พอประกอบกลับก็แค่เติม 00 ต่อท้าย</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · DISASSEMBLY ============ -->
+        <section class="slide-view" data-title="Disassembly — ถอดรหัสย้อนกลับ" aria-label="สไลด์ 13: Disassembly">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">DISASSEMBLY</p>
+            <h2 class="slide-title">ถอดรหัสย้อนกลับ: เลข 0/1 → Assembly</h2>
+            <p class="slide-subtitle">ตรงข้ามกับ Assembly — เรามีเลข 32 บิต แล้วต้องรู้ว่ามันคือคำสั่งอะไร</p>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>ขั้น 1</b> ดู <b>opcode (6 บิตแรก)</b> ก่อนเสมอ — opcode = 0 คือ R-format · opcode 2/3 คือ J-format · นอกนั้นคือ I-format</div>
+              <div class="step-box"><b>ขั้น 2</b> เมื่อรู้ format แล้ว แบ่งบิตที่เหลือตามช่องของ format นั้น</div>
+              <div class="step-box"><b>ขั้น 3</b> แปลแต่ละช่องเป็นชื่อ register / ตัวเลข แล้วเขียนเป็น Assembly (ขั้นสูง: แปลงเป็นโค้ด C ที่มีความหมาย เช่น while loop)</div>
+            </div>
+
+            <div class="card mt-5" style="padding:20px">
+              <b style="font-size:14.5px">ตัวอย่าง: <code style="color:var(--cyan);font-family:Consolas,monospace">0x012A4020</code></b>
+              <div class="fmt-table mt-3">
+                <table>
+                  <tr><th>ขั้น</th><th>คำนวณ</th><th>ผล</th></tr>
+                  <tr><td>ดู opcode</td><td>000000</td><td>R-format</td></tr>
+                  <tr><td>แบ่งช่อง</td><td>000000 01001 01010 01000 00000 100000</td><td>rs=9 · rt=10 · rd=8 · funct=32</td></tr>
+                  <tr><td>แปล register</td><td>$8=$t0 · $9=$t1 · $10=$t2</td><td><b class="cyan">add $t0,$t1,$t2</b></td></tr>
+                </table>
+              </div>
+              <p class="card-text small mt-3">funct = 32 = add → คำสั่งนี้คือ <b class="cyan">add $t0,$t1,$t2</b> (หรือ add $8,$9,$10)</p>
+            </div>
+
+            <div class="tip-box tip-note mt-5">
+              <i data-lucide="info"></i>
+              <div><b>วิธีจำชื่อ register ตัวเลข (ข้อสอบชอบถาม)</b>เลข 8–15 = <b class="cyan">$t0–$t7</b> · เลข 16–23 = <b class="cyan">$s0–$s7</b> — เช่น rs = 9 → 9 นับต่อจาก 8 ($t0) ได้ <b class="cyan">$t1</b>, rd = 8 → $t0</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 14 · PSEUDO ============ -->
+        <section class="slide-view" data-title="Pseudoinstructions — MAL vs TAL" aria-label="สไลด์ 14: MAL vs TAL">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">PSEUDOINSTRUCTIONS</p>
+            <h2 class="slide-title">คำสั่งลวงตา (Pseudoinstruction) — MAL vs TAL</h2>
+            <p class="slide-subtitle">move, li, la ไม่มีอยู่จริงในฮาร์ดแวร์ — Assembler แปลงให้เป็นคำสั่งจริง 1 ตัวหรือมากกว่านั้นโดยอัตโนมัติ</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="arrow-right-left" class="cyan"></i>move $t0,$t1</h3>
+                <p class="card-text small mt-2">→ แปลงเป็น <code style="color:var(--cyan)">add $t0,$zero,$t1</code> (บวก 0 = คงค่า)</p>
+              </div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="chevrons-right" class="cyan"></i>li ค่าใหญ่เกิน 16 บิต</h3>
+                <p class="card-text small mt-2">→ แปลงเป็น 2 คำสั่ง: <code style="color:var(--cyan)">lui</code> (ใส่ครึ่งบน) + <code style="color:var(--cyan)">ori</code> (ใส่ครึ่งล่าง)</p>
+              </div>
+            </div>
+
+            <div class="fmt-table mt-5">
+              <table>
+                <tr><th>ชื่อ</th><th>คืออะไร</th><th>ตัวอย่าง</th></tr>
+                <tr><td class="r">MAL</td><td>MIPS Assembly Language — ภาษาที่โปรแกรมเมอร์เขียนได้ รวมคำสั่งลวงตา</td><td><code>move $t0,$t1</code> · <code>li $s0,0x12345678</code></td></tr>
+                <tr><td class="r">TAL</td><td>True Assembly Language — ชุดคำสั่งที่แปลงเป็นเลขฐาน 2 ได้โดยตรง (ไม่มีคำสั่งลวงตา)</td><td><code>add $t0,$zero,$t1</code> · <code>lui + ori</code></td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-remember mt-5">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ห้ามใช้ $at เอง!</b> เวลา Assembler แปลงคำสั่งลวงตา มันใช้ register ชั่วคราวชื่อ <b class="cyan">$at</b> (assembler temporary) — ถ้าโปรแกรมเมอร์ใช้ $at เอง อาจถูกเขียนทับโดยไม่รู้ตัว</div>
+            </div>
+
+            <div class="formula mt-4" style="font-size:13.5px">
+              โปรแกรมต้องถูกแปลง: <span class="hl">MAL → TAL → เลขฐาน 2</span> ก่อนถึงจะรันบนฮาร์ดแวร์ได้จริง
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 15 · สรุป 3 FORMATS ============ -->
+        <section class="slide-view" data-title="สรุปตาราง 3 Formats + ใจความสำคัญ" aria-label="สไลด์ 15: สรุป 3 Formats">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">SUMMARY TABLE</p>
+            <h2 class="slide-title">สรุปภาพรวมทั้งหมดในตารางเดียว</h2>
+            <p class="slide-subtitle">Format ใช้กับคำสั่งประเภทไหน โครงสร้าง 32 บิตเป็นยังไง — จำตารางนี้ให้ขึ้นใจ</p>
+
+            <div class="fmt-table mt-6">
+              <table>
+                <tr><th>Format</th><th>ใช้กับคำสั่งประเภท</th><th>โครงสร้าง 32 บิต</th></tr>
+                <tr><td class="r">R</td><td>คำนวณระหว่าง register ล้วน ๆ (add, sub, slt, sll)</td><td><code>opcode(6)+rs(5)+rt(5)+rd(5)+shamt(5)+funct(6)</code></td></tr>
+                <tr><td class="i">I</td><td>เลขคงที่ / เข้าถึง Memory / branch (addi, lw, sw, beq, bne)</td><td><code>opcode(6)+rs(5)+rt(5)+immediate(16)</code></td></tr>
+                <tr><td class="j">J</td><td>กระโดดไปที่ใดก็ได้ (j, jal)</td><td><code>opcode(6)+target address(26)</code></td></tr>
+              </table>
+            </div>
+
+            <div class="card mt-6" style="border-color:rgba(56,189,248,.4);padding:22px">
+              <p style="font-size:15px;line-height:1.8;color:var(--text-2)">
+                💡 <b style="color:var(--text)">ใจความสำคัญที่สุดของทั้งบท</b> — คำสั่งของคอมพิวเตอร์ไม่ใช่อะไรลึกลับ:
+                มันคือ <b class="cyan">ตัวเลข 32 บิตที่ถูกแบ่งเป็นช่อง ๆ ตามกติกาที่ตกลงกันไว้ล่วงหน้า</b>
+                และเพราะมันเป็นแค่ตัวเลข มันจึงเก็บในหน่วยความจำเดียวกับข้อมูลได้ — นี่คือรากฐานของคอมพิวเตอร์ยุคใหม่ทุกเครื่อง
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 16 · เรื่องออกสอบ ============ -->
+        <section class="slide-view" data-title="เรื่องที่น่าจะออกสอบ" aria-label="สไลด์ 16: เรื่องออกสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM FOCUS</p>
+            <h2 class="slide-title">เรื่องที่น่าจะออกสอบ ⭐⭐⭐</h2>
+            <p class="slide-subtitle">คำถามยอดฮิต — ลองตอบในใจก่อนดูคำตอบ</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="hash" class="cyan"></i>MIPS Instruction มีขนาดเท่าไร?</h3><p class="card-text small mt-2"><b class="cyan">32 bits = 4 bytes</b> คงที่ทุกคำสั่ง</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="layout-grid" class="cyan"></i>R-Format มีช่องอะไรบ้าง?</h3><p class="card-text small mt-2"><b class="cyan">opcode, rs, rt, rd, shamt, funct</b></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="layout-grid" class="cyan"></i>I-Format มีช่องอะไรบ้าง?</h3><p class="card-text small mt-2"><b class="cyan">opcode, rs, rt, immediate</b></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="layout-grid" class="cyan"></i>J-Format มีช่องอะไรบ้าง?</h3><p class="card-text small mt-2"><b class="cyan">opcode, target address</b></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="hash" class="cyan"></i>Immediate คืออะไร?</h3><p class="card-text small mt-2">ค่าตัวเลขที่อยู่ใน Instruction โดยตรง เช่น 10 ใน <code>addi $t0,$t1,10</code></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="git-branch" class="cyan"></i>branch คำนวณ PC ยังไง?</h3><p class="card-text small mt-2">PC ใหม่ = <b class="cyan">(PC+4) + immediate×4</b> · jump = {PC บน 4, target 26, 00}</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="repeat" class="cyan"></i>move $t0,$t1 แปลงเป็น?</h3><p class="card-text small mt-2"><b class="cyan">add $t0,$zero,$t1</b> — pseudoinstruction (MAL) → TAL</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="cpu" class="cyan"></i>opcode = 0 คือ?</h3><p class="card-text small mt-2">R-format — ต้องดู funct ร่วมด้วยเพื่อรู้คำสั่งที่แน่นอน (add = 32)</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 17 · FIB.ASM ============ -->
+        <section class="slide-view" data-title="โปรแกรมข้อสอบ — fib.asm" aria-label="สไลด์ 17: fib.asm">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM PROGRAM · fib.asm</p>
+            <h2 class="slide-title">โปรแกรมข้อสอบ: Fibonacci (fib.asm)</h2>
+            <p class="slide-subtitle">โปรแกรมเรียกซ้ำ (recursion) ที่ออกข้อสอบท้ายบท 20 ข้อ — main เรียก fib(7) แล้วเก็บผลลัพธ์ไว้ที่ $s5</p>
+
+            <div class="asm-code mt-6"><span class="dir">.text</span>
+<span class="num">0x00400000</span>  <span class="ins">main:</span> <span class="ins">addi</span> <span class="reg">$a0</span>,<span class="reg">$zero</span>,<span class="num">7</span>
+<span class="num">0x00400004</span>        <span class="ins">jal</span> <span class="reg">fib</span>
+<span class="num">0x00400008</span>        <span class="ins">add</span> <span class="reg">$s5</span>,<span class="reg">$v0</span>,<span class="reg">$zero</span>
+<span class="num">0x0040000c</span>        <span class="ins">j</span> <span class="reg">exit</span>
+<span class="num">0x00400010</span>  <span class="ins">fib:</span>  <span class="ins">addi</span> <span class="reg">$sp</span>,<span class="reg">$sp</span>,<span class="num">-12</span>   <span class="cmt"># จอง stack 12 bytes (3 ช่อง)</span>
+<span class="num">0x00400014</span>        <span class="ins">sw</span> <span class="reg">$ra</span>,<span class="num">8</span>(<span class="reg">$sp</span>)       <span class="cmt"># เก็บ address กลับ</span>
+<span class="num">0x00400018</span>        <span class="ins">sw</span> <span class="reg">$s0</span>,<span class="num">4</span>(<span class="reg">$sp</span>)       <span class="cmt"># เก็บ $s0</span>
+<span class="num">0x0040001c</span>        <span class="ins">addi</span> <span class="reg">$v0</span>,<span class="reg">$zero</span>,<span class="num">1</span>   <span class="cmt"># base case: คืนค่า 1</span>
+<span class="num">0x00400020</span>        <span class="ins">beq</span> <span class="reg">$a0</span>,<span class="reg">$zero</span>,<span class="reg">fin</span>  <span class="cmt"># a0==0 → จบ</span>
+<span class="num">0x00400024</span>        <span class="ins">addi</span> <span class="reg">$t0</span>,<span class="reg">$zero</span>,<span class="num">1</span>
+<span class="num">0x00400028</span>        <span class="ins">beq</span> <span class="reg">$a0</span>,<span class="reg">$t0</span>,<span class="reg">fin</span>   <span class="cmt"># a0==1 → จบ</span>
+<span class="num">0x0040002c</span>        <span class="ins">addi</span> <span class="reg">$a0</span>,<span class="reg">$a0</span>,<span class="num">-1</span>     <span class="cmt"># a0-1</span>
+<span class="num">0x00400030</span>        <span class="ins">sw</span> <span class="reg">$a0</span>,<span class="num">0</span>(<span class="reg">$sp</span>)       <span class="cmt"># เก็บ a0-1</span>
+<span class="num">0x00400034</span>        <span class="ins">jal</span> <span class="reg">fib</span>              <span class="cmt"># fib(a0-1)</span>
+<span class="num">0x00400038</span>        <span class="ins">lw</span> <span class="reg">$a0</span>,<span class="num">0</span>(<span class="reg">$sp</span>)       <span class="cmt"># คืนค่า a0</span>
+<span class="num">0x0040003c</span>        <span class="ins">addi</span> <span class="reg">$a0</span>,<span class="reg">$a0</span>,<span class="num">-1</span>     <span class="cmt"># a0-2</span>
+<span class="num">0x00400040</span>        <span class="ins">add</span> <span class="reg">$s0</span>,<span class="reg">$v0</span>,<span class="reg">$zero</span>  <span class="cmt"># s0 = fib(a0-1)</span>
+<span class="num">0x00400044</span>        <span class="ins">jal</span> <span class="reg">fib</span>              <span class="cmt"># fib(a0-2)</span>
+<span class="num">0x00400048</span>        <span class="ins">add</span> <span class="reg">$v0</span>,<span class="reg">$v0</span>,<span class="reg">$s0</span>     <span class="cmt"># v0 = fib(a0-1)+fib(a0-2)</span>
+<span class="num">0x0040004c</span>  <span class="ins">fin:</span>  <span class="ins">lw</span> <span class="reg">$s0</span>,<span class="num">4</span>(<span class="reg">$sp</span>)
+<span class="num">0x00400050</span>        <span class="ins">lw</span> <span class="reg">$ra</span>,<span class="num">8</span>(<span class="reg">$sp</span>)
+<span class="num">0x00400054</span>        <span class="ins">addi</span> <span class="reg">$sp</span>,<span class="reg">$sp</span>,<span class="num">12</span>
+<span class="num">0x00400058</span>        <span class="ins">jr</span> <span class="reg">$ra</span>
+<span class="num">0x0040005c</span>  <span class="ins">exit:</span> <span class="ins">add</span> <span class="reg">$zero</span>,<span class="reg">$zero</span>,<span class="reg">$zero</span></div>
+
+            <div class="grid-2 mt-5">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="info" class="cyan"></i>โปรแกรมนี้คืออะไร?</h3><p class="card-text small mt-2">fib(n) = fib(n-1) + fib(n-2) โดย fib(0) = fib(1) = 1 → ลำดับ 1, 1, 2, 3, 5, 8, 13, 21 → fib(7) = <b class="cyan">21</b><br /><span style="font-size:12px">⚠️ ถ้าเป็น Fibonacci <b>มาตรฐาน</b> (fib(0) = 0, fib(1) = 1) → ลำดับ 0, 1, 1, 2, 3, 5, 8, 13 → fib(7) = <b class="cyan">13</b></span></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="map" class="cyan"></i>ใช้ address อะไร?</h3><p class="card-text small mt-2">text เริ่ม 0x00400000 (แต่ละคำสั่งห่าง 4 bytes) · $sp เริ่มต้น <b class="cyan">0x7fffeffc</b> · แต่ละครั้งเข้า fib ลด sp ลง 12</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 18 · TRACE FIB ============ -->
+        <section class="slide-view" data-title="fib.asm — ไล่ทีละคำสั่ง (Stack & Recursion)" aria-label="สไลด์ 18: trace fib">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TRACE · STACK & RECURSION</p>
+            <h2 class="slide-title">fib.asm — ไล่ทีละคำสั่ง กับ Stack</h2>
+            <p class="slide-subtitle">กดปุ่มเพื่อดู stack เติบโตทีละเฟรม (การลงลึกครั้งแรกของ fib(7))</p>
+
+            <div class="split mt-6" style="grid-template-columns:1.1fr .9fr">
+              <div>
+                <div class="stack-stage">
+                  <div id="fibFrames" style="min-height:120px"></div>
+                  <div class="stack-status" id="fibStatus">กดปุ่มเพื่อเริ่มไล่ stack 🔽</div>
+                </div>
+                <div class="flex items-center gap-3 mt-4 wrap">
+                  <button class="btn btn-primary" id="fibStepBtn"><i data-lucide="arrow-down"></i> Step ลงลึก</button>
+                  <button class="btn btn-ghost" id="fibResetBtn"><i data-lucide="rotate-ccw"></i> เริ่มใหม่</button>
+                </div>
+              </div>
+              <div class="step-list">
+                <div class="step-box"><b>กฎของ jal</b> jal เก็บ <code>$ra</code> = address ของคำสั่งถัดไป แล้วกระโดด</div>
+                <div class="step-box"><b>กฎของ stack</b> เข้า fib: <code>addi $sp,$sp,-12</code> → เก็บ <code>$ra</code> ที่ 8($sp), <code>$s0</code> ที่ 4($sp), <code>$a0</code> ที่ 0($sp)</div>
+                <div class="step-box"><b>ความลึกสูงสุด</b> 7 เฟรม (fib(7)→fib(1)) = 7×12 = 84 bytes → $sp ต่ำสุด <code>0x7fffefa8</code></div>
+                <div class="step-box"><b>$ra มีค่าแค่ 3 แบบ</b> <code>0x00400008</code> (จาก main) · <code>0x00400038</code> (jal ซ้าย) · <code>0x00400048</code> (jal ขวา)</div>
+              </div>
+            </div>
+
+            <div class="trace-table mt-6">
+              <table>
+                <tr><th>เฟรม (depth)</th><th>ฟังก์ชัน</th><th>$sp หลัง addi -12</th><th>$ra ที่เก็บ (8($sp))</th><th>$a0 ที่เก็บ (0($sp))</th></tr>
+                <tr><td>1</td><td>fib(7)</td><td>0x7fffeff0</td><td class="ans">0x00400008</td><td>6</td></tr>
+                <tr><td>2</td><td>fib(6)</td><td>0x7fffefe4</td><td>0x00400038</td><td>5</td></tr>
+                <tr><td>3</td><td>fib(5)</td><td>0x7fffefd8</td><td>0x00400038</td><td>4</td></tr>
+                <tr><td>4</td><td>fib(4)</td><td class="ans">0x7fffefcc</td><td>0x00400038</td><td>3</td></tr>
+                <tr><td>5</td><td>fib(3)</td><td>0x7fffefc0</td><td>0x00400038</td><td>2</td></tr>
+                <tr><td>6</td><td>fib(2)</td><td>0x7fffefb4</td><td>0x00400038</td><td>1</td></tr>
+                <tr><td>7</td><td>fib(1)</td><td class="ans">0x7fffefa8</td><td>0x00400038</td><td>— (base case)</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>นับจำนวนครั้งที่ fib ถูกเรียก (ข้อ 11)</h3>
+                <div class="step-list" style="margin-top:8px">
+                  <div class="step-box"><b>1.</b> สูตร: C(0) = C(1) = 1, C(n) = 1 + C(n-1) + C(n-2)</div>
+                  <div class="step-box"><b>2.</b> C(2)=3, C(3)=5, C(4)=9, C(5)=15, C(6)=25, C(7)=<b class="cyan">41</b> ครั้ง</div>
+                  <div class="step-box"><b>3.</b> แต่ละครั้งจอง 12 bytes → 41 × 12 = <b class="cyan">492 bytes</b> (รวมทั้งโปรแกรม)</div>
+                  <div class="step-box"><b>4.</b> สูงสุดพร้อมกัน = 7 เฟรม × 12 = 84 bytes</div>
+                </div>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="repeat" class="cyan"></i>นับจำนวนครั้งที่เก็บค่า $ra (ข้อ 18–19)</h3>
+                <div class="step-list" style="margin-top:8px">
+                  <div class="step-box"><b>1.</b> jal ใน main → <code>$ra = 0x00400008</code> — เกิด <b class="cyan">1 ครั้ง</b> (ข้อ 18)</div>
+                  <div class="step-box"><b>2.</b> fib ทุกครั้งที่ n &ge; 2 จะรัน jal ซ้าย (0x00400034) และ jal ขวา (0x00400044) อย่างละ 1 ครั้ง</div>
+                  <div class="step-box"><b>3.</b> นับ fib(n&ge;2): fib(7)=1, fib(6)=1, fib(5)=2, fib(4)=3, fib(3)=5, fib(2)=8 → รวม <b class="cyan">20</b></div>
+                  <div class="step-box"><b>4.</b> → <code>$ra = 0x00400048</code> (jal ขวา) ถูกเก็บ <b class="cyan">20 ครั้ง</b> (ข้อ 19)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 19 · SUMMARY ============ -->
+        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 19: สรุปบทเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER SUMMARY</p>
+            <h2 class="slide-title">สรุปบทเรียน</h2>
+            <p class="slide-subtitle">เก็บทุกประเด็นสำคัญของบทนี้ไว้ในหน้าเดียว</p>
+            <div class="grid-4 mt-6">
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="database" class="cyan"></i>Stored-Program</h3><p class="card-text small">คำสั่งก็คือตัวเลข 32 บิต — เก็บใน Memory เดียวกับข้อมูล</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="map-pin" class="cyan"></i>PC</h3><p class="card-text small">Program Counter — ชี้ address ของคำสั่งที่กำลังจะรัน</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="binary" class="cyan"></i>32 Bits</h3><p class="card-text small">ทุกคำสั่ง MIPS = 32 bits = 4 bytes คงที่</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="layout-grid" class="cyan"></i>R-Format</h3><p class="card-text small">opcode|rs|rt|rd|shamt|funct — add, sub, slt, sll</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="layout-grid" class="cyan"></i>I-Format</h3><p class="card-text small">opcode|rs|rt|immediate — addi, lw, sw, beq, bne</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="layout-grid" class="cyan"></i>J-Format</h3><p class="card-text small">opcode|target(26) — j, jal</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="git-branch" class="cyan"></i>Branch vs Jump</h3><p class="card-text small">branch = (PC+4)+imm×4 (สัมพัทธ์) · jump = {PCบน4, target, 00} (สัมบูรณ์)</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="repeat" class="cyan"></i>MAL → TAL</h3><p class="card-text small">Assembler แปลง pseudoinstruction (move, li) → คำสั่งจริง ใช้ $at</p></div>
+            </div>
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>R = Register · I = Immediate · J = Jump · opcode=0 คือ R · add $8,$9,$10 = 0x012A4020 · fib เรียกตัวเองโดยใช้ stack เก็บ $ra ที่ 8($sp)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 20 · CHEAT SHEET ============ -->
+        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 20: สูตรจำก่อนสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM CHEAT SHEET</p>
+            <h2 class="slide-title">สูตรจำก่อนสอบ</h2>
+            <p class="slide-subtitle">รวมคำศัพท์และสูตรสำคัญแบบกระชับ — ทบทวนก่อนสอบในเวลาไม่กี่นาที</p>
+            <div class="cheat-grid mt-6">
+              <div class="cheat-item"><span class="term">MIPS Instruction</span><span class="arrow">→</span><span class="def">32 bits = 4 bytes คงที่ทุกคำสั่ง</span></div>
+              <div class="cheat-item"><span class="term">R-Format</span><span class="arrow">→</span><span class="def">opcode|rs|rt|rd|shamt|funct</span></div>
+              <div class="cheat-item"><span class="term">I-Format</span><span class="arrow">→</span><span class="def">opcode|rs|rt|immediate</span></div>
+              <div class="cheat-item"><span class="term">J-Format</span><span class="arrow">→</span><span class="def">opcode|target address (26)</span></div>
+              <div class="cheat-item"><span class="term">add $8,$9,$10</span><span class="arrow">→</span><span class="def">0x012A4020 (rs 9 · rt 10 · rd 8 · funct 32)</span></div>
+              <div class="cheat-item"><span class="term">branch (beq/bne)</span><span class="arrow">→</span><span class="def">PC ใหม่ = (PC+4) + imm×4</span></div>
+              <div class="cheat-item"><span class="term">jump (j/jal)</span><span class="arrow">→</span><span class="def">{PC บน 4 บิต, target 26, 00}</span></div>
+              <div class="cheat-item"><span class="term">opcode = 0</span><span class="arrow">→</span><span class="def">R-format · 2/3 = J · นอกนั้น = I</span></div>
+              <div class="cheat-item"><span class="term">rs/rt/rd = 5 บิต</span><span class="arrow">→</span><span class="def">register 32 ตัว (0–31)</span></div>
+              <div class="cheat-item"><span class="term">move rd,rs</span><span class="arrow">→</span><span class="def">add rd,$zero,rs (pseudoinstruction)</span></div>
+              <div class="cheat-item"><span class="term">li ค่าใหญ่</span><span class="arrow">→</span><span class="def">lui + ori (2 คำสั่ง)</span></div>
+              <div class="cheat-item"><span class="term">MAL → TAL → 0/1</span><span class="arrow">→</span><span class="def">Assembler แปลง pseudoinstruction ก่อน</span></div>
+              <div class="cheat-item"><span class="term">$at</span><span class="arrow">→</span><span class="def">register ชั่วคราวของ Assembler — ห้ามใช้เอง</span></div>
+              <div class="cheat-item"><span class="term">jal</span><span class="arrow">→</span><span class="def">เก็บ $ra = address ถัดไป แล้วกระโดด</span></div>
+              <div class="cheat-item"><span class="term">fib: stack</span><span class="arrow">→</span><span class="def">12 bytes/เฟรม · $ra ที่ 8($sp), $s0 ที่ 4($sp), $a0 ที่ 0($sp)</span></div>
+              <div class="cheat-item"><span class="term">fib(7)</span><span class="arrow">→</span><span class="def">21 (โปรแกรมนี้ fib(0)=1) · มาตรฐาน = 13</span></div>
+              <div class="cheat-item"><span class="term">$sp เริ่มต้น</span><span class="arrow">→</span><span class="def">0x7fffeffc — ลด 12 ทุกครั้งเข้า fib</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 21 · QUIZ ============ -->
+        <section class="slide-view quiz-slide" data-title="Quiz — แบบทดสอบบท 4 (10 ข้อ)" aria-label="สไลด์ 21: แบบทดสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">QUIZ MODE · 10 QUESTIONS</p>
+            <h2 class="slide-title">แบบทดสอบ บทที่ 4</h2>
+            <p class="slide-subtitle">ตอบคำถามแล้วดูคำอธิบายทันที — ครอบคลุม Stored-Program, R/I/J Format, Branch/Jump และ Pseudoinstruction</p>
+            <div id="quizC4"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 22 · FLASHCARDS ============ -->
+        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 22: การ์ดทบทวน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · FLASHCARDS</p>
+            <h2 class="slide-title">Flashcards — ทบทวนความรู้</h2>
+            <p class="slide-subtitle">อ่านคำถามแล้วลองตอบในใจก่อน — คลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+
+            <div class="split mt-6" style="grid-template-columns:1fr">
+              <div class="flashcard-wrap">
+                <div class="flashcard" id="flashcard4" role="button" tabindex="0" aria-label="การ์ดคำถาม — คลิกเพื่อพลิก">
+                  <div class="flashcard-face flashcard-front">
+                    <span class="fc-eyebrow">QUESTION</span>
+                    <p class="fc-q" id="fcQ4">—</p>
+                    <span class="flashcard-hint">คลิกเพื่อพลิกการ์ด 🔄</span>
+                  </div>
+                  <div class="flashcard-face flashcard-back">
+                    <span class="fc-eyebrow">ANSWER</span>
+                    <p class="fc-a" id="fcA4">—</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-5 wrap" style="justify-content:center">
+              <button class="btn btn-ghost" id="fcPrev4"><i data-lucide="chevron-left"></i> Previous</button>
+              <span class="chip" id="fcCounter4">1 / 18</span>
+              <button class="btn btn-ghost" id="fcNext4">Next <i data-lucide="chevron-right"></i></button>
+              <button class="btn btn-cyan" id="fcShuffle4"><i data-lucide="shuffle"></i> Shuffle</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 23 · GLOSSARY ============ -->
+        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 23: คำศัพท์">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · GLOSSARY</p>
+            <h2 class="slide-title">Glossary — คำศัพท์ที่ควรรู้</h2>
+            <p class="slide-subtitle">ค้นหาคำศัพท์แบบเรียลไทม์ — คลิกคำศัพท์เพื่อดูความหมาย</p>
+
+            <div class="search-box mt-5">
+              <i data-lucide="search"></i>
+              <input type="search" id="glossarySearch4" placeholder="Search term... (ค้นหาคำศัพท์)" aria-label="ค้นหาคำศัพท์" autocomplete="off" />
+            </div>
+            <p class="text-3 mt-3" style="font-size:13px" id="glossaryCount4">25 คำศัพท์</p>
+            <div class="grid-2 mt-4" id="glossaryList4"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 24 · EXAM ============ -->
+        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — พิมพ์คำตอบ 20 ข้อ" aria-label="สไลด์ 24: ข้อสอบหลังเรียน 20 ข้อ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">POST-LESSON EXAM · 20 QUESTIONS</p>
+            <h2 class="slide-title" id="examHeadTitle">ข้อสอบหลังเรียน <span class="grad-text">20 ข้อ</span></h2>
+            <p class="slide-subtitle" id="examHeadSub">trace โปรแกรม fib.asm (ข้อ 1–20) — ตอบเลขฐาน 16 นำหน้าด้วย 0x หรือเลขฐาน 10 ตามที่โจทย์ระบุ — <b class="cyan">พิมพ์คำตอบเอง</b> เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้</p>
+            <div id="quizExam4"></div>
+          </div>
+        </section>
+      </div><!-- /viewport -->
+
+      <!-- ================= BOTTOM BAR ================= -->
+      <footer class="bottombar">
+        <button class="bb-nav-btn" id="prevBtn" aria-label="สไลด์ก่อนหน้า">
+          <i data-lucide="chevron-left"></i><span class="bb-label">ก่อนหน้า</span>
+        </button>
+
+        <div class="bb-center">
+          สไลด์ <b id="bbCounter">1</b> / <b id="bbTotal">24</b>
+        </div>
+
+        <div class="bb-tools">
+          <button class="icon-btn" id="fullscreenBtn" aria-label="ขยายสไลด์เต็มจอ" title="ขยายสไลด์">
+            <i data-lucide="maximize-2"></i>
+          </button>
+          <button class="icon-btn" id="printSlidesBtn" aria-label="พิมพ์สไลด์ทั้งหมด" title="พิมพ์สไลด์ทั้งหมด">
+            <i data-lucide="printer"></i>
+          </button>
+          <button class="icon-btn" id="printCardsBtn" aria-label="พิมพ์การ์ดสรุป" title="พิมพ์การ์ดสรุป">
+            <i data-lucide="file-output"></i>
+          </button>
+        </div>
+
+        <button class="bb-nav-btn next" id="nextBtn" aria-label="สไลด์ถัดไป">
+          <span class="bb-label">ถัดไป</span><i data-lucide="chevron-right"></i>
+        </button>
+      </footer>
+
+    </main>
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ================= DRAWER BACKDROP ================= -->
+<div id="drawerBackdrop" aria-hidden="true"></div>
+
+<!-- ================= NOTES PANEL ================= -->
+<aside class="notes-panel" id="notesPanel" aria-label="บันทึกย่อ">
+  <div class="flex items-center justify-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div>
+      <b style="font-size:15px">📝 บันทึกย่อ (Notes)</b>
+      <p class="text-3" style="font-size:12px" id="notesLabel">สไลด์ที่กำลังเรียน</p>
+    </div>
+    <button class="icon-btn" id="notesCloseBtn" aria-label="ปิดบันทึกย่อ"><i data-lucide="x"></i></button>
+  </div>
+  <textarea id="notesTextarea" placeholder="เขียนสิ่งที่ต้องจำจากสไลด์นี้...&#10;เช่น:&#10;- คำสั่ง = ตัวเลข 32 บิต แบ่งเป็นช่อง (fields)&#10;- R = opcode|rs|rt|rd|shamt|funct · I = opcode|rs|rt|imm · J = opcode|target&#10;- branch: PC = (PC+4) + imm×4 · jump: {PCบน4, target26, 00}&#10;- add $8,$9,$10 = 0x012A4020 · move → add rd,$zero,rs" aria-label="บันทึกย่อ"></textarea>
+  <div class="text-3" style="padding:10px 20px 14px;font-size:12px;border-top:1px solid var(--border)">
+    💾 บันทึกอัตโนมัติลงในเครื่องของคุณ (localStorage)
+  </div>
+</aside>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= COMPLETION OVERLAY ================= -->
+<div id="completionOverlay" role="dialog" aria-modal="true" aria-label="จบบทเรียน">
+  <div class="card center" style="max-width:440px;position:relative;padding:40px 32px;z-index:1">
+    <div style="font-size:56px" class="float-y">🎉</div>
+    <h2 class="slide-title mt-4" style="font-size:28px">Chapter Complete!</h2>
+    <p class="text-2 mt-2" id="completionMsg">คุณเรียนครบทุกสไลด์แล้ว — ยอดเยี่ยมมาก! <b class="grad-text">Keep Learning!</b></p>
+    <div class="grid-3 mt-5" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneSlides">24</b><p class="text-3" style="font-size:12px">สไลด์</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneScore">–</b><p class="text-3" style="font-size:12px">คะแนน Quiz</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px">100%</b><p class="text-3" style="font-size:12px">ความคืบหน้า</p></div>
+    </div>
+    <div class="flex items-center gap-3 mt-6 wrap" style="justify-content:center">
+      <button class="btn btn-ghost" id="completionCloseBtn">ปิด 🎊</button>
+      <button class="btn btn-primary" id="completionRestartBtn"><i data-lucide="rotate-ccw"></i> เรียนใหม่อีกครั้ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRINT AREA ================= -->
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- Demo: ไล่ stack ของ fib ทีละเฟรม -->
+<script>
+  (function () {
+    var steps = [
+      { frames: [], msg: "main: $sp = 0x7fffeffc → jal fib(7) → $ra = 0x00400008" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008 @ 0x7fffeff8", "a0 7→6 เก็บ @ 0x7fffeff0"]], msg: "fib(7): จอง 12 bytes → jal fib(6)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0 6→5 เก็บ"]], msg: "fib(6): ลด sp 12 → jal fib(5)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0=5"], ["fib(5)", "0x7fffefd8", "ra 0x00400038", "a0 5→4 เก็บ"]], msg: "fib(5): a0 กลายเป็น 4 ครั้งแรก! → jal fib(4)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0=5"], ["fib(5)", "0x7fffefd8", "ra 0x00400038", "a0=4"], ["fib(4)", "0x7fffefcc", "ra 0x00400038 @ 0x7fffefd4", "a0 4→3 เก็บ"]], msg: "fib(4): sp = 0x7fffefcc — เก็บ $ra ที่ 0x7fffefd4 (ข้อ 15–16!)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0=5"], ["fib(5)", "0x7fffefd8", "ra 0x00400038", "a0=4"], ["fib(4)", "0x7fffefcc", "ra 0x00400038", "a0=3"], ["fib(3)", "0x7fffefc0", "ra 0x00400038", "a0 3→2 เก็บ"]], msg: "fib(3): ลด sp 12 → jal fib(2)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0=5"], ["fib(5)", "0x7fffefd8", "ra 0x00400038", "a0=4"], ["fib(4)", "0x7fffefcc", "ra 0x00400038", "a0=3"], ["fib(3)", "0x7fffefc0", "ra 0x00400038", "a0=2"], ["fib(2)", "0x7fffefb4", "ra 0x00400038", "a0 2→1 เก็บ"]], msg: "fib(2): ลด sp 12 → jal fib(1)" },
+      { frames: [["fib(7)", "0x7fffeff0", "ra 0x00400008", "a0=6"], ["fib(6)", "0x7fffefe4", "ra 0x00400038", "a0=5"], ["fib(5)", "0x7fffefd8", "ra 0x00400038", "a0=4"], ["fib(4)", "0x7fffefcc", "ra 0x00400038", "a0=3"], ["fib(3)", "0x7fffefc0", "ra 0x00400038", "a0=2"], ["fib(2)", "0x7fffefb4", "ra 0x00400038", "a0=1"], ["fib(1)", "0x7fffefa8", "ra 0x00400038", "base case → คืน 1"]], msg: "ลึกสุด 7 เฟรม: $sp = 0x7fffefa8 (84 bytes) — fib(1) คืน 1 แล้วเริ่มคลายกลับ 🔁" }
+    ];
+    var idx = -1;
+    var box = document.getElementById("fibFrames");
+    var status = document.getElementById("fibStatus");
+    function render() {
+      var html = "";
+      if (idx >= 0) {
+        steps[idx].frames.forEach(function (f, i) {
+          html += '<div class="stack-frame' + (i === steps[idx].frames.length - 1 ? " new" : "") + '">' +
+            '<span class="sf-n">' + f[0] + '</span>' +
+            '<span class="sf-sp">sp = ' + f[1] + '</span>' +
+            '<span class="sf-ra">' + f[2] + '</span>' +
+            '<span class="sf-note">' + f[3] + '</span></div>';
+        });
+      }
+      box.innerHTML = html;
+      status.textContent = idx >= 0 ? steps[idx].msg : "กดปุ่มเพื่อเริ่มไล่ stack 🔽";
+    }
+    var stepBtn = document.getElementById("fibStepBtn");
+    if (stepBtn) stepBtn.addEventListener("click", function () {
+      idx = (idx + 1) % steps.length;
+      render();
+    });
+    var resetBtn = document.getElementById("fibResetBtn");
+    if (resetBtn) resetBtn.addEventListener("click", function () { idx = -1; render(); });
+    render();
+  })();
+</script>
+
+<!-- App scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Interactive Digital Textbook — Computer Architecture / Stored-Program Concept & ISA" />
+  <title>CA · Interactive Digital Textbook — เมนูหลัก</title>
+
+  <!-- App styles — โหลดก่อนเสมอ (สำคัญต่อการแสดงผล) -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS (Play CDN) — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body data-page="menu">
+
+<!-- ================= CHAPTER MENU (เมนูหลัก) ================= -->
+<div id="chapterMenu" aria-label="เมนูหลัก — เลือกบทเรียน">
+  <!-- พื้นหลังเคลื่อนไหว -->
+  <div class="menu-bg" aria-hidden="true">
+    <div class="menu-bg-grid"></div>
+    <div class="menu-orb orb-1"></div>
+    <div class="menu-orb orb-2"></div>
+    <div class="menu-orb orb-3"></div>
+    <div class="menu-bg-ring"></div>
+  </div>
+
+  <div class="menu-inner">
+    <!-- Hero -->
+    <header class="menu-hero">
+      <div class="menu-logo-wrap">
+        <div class="cn-logo menu-logo">CA</div>
+        <div class="menu-logo-ping" aria-hidden="true"></div>
+      </div>
+      <p class="menu-kicker">INTERACTIVE DIGITAL TEXTBOOK · COMPUTER ARCHITECTURE</p>
+      <h1 class="menu-title">เรียน <span class="grad-text">สถาปัตยกรรมคอมพิวเตอร์</span><br class="hide-sm" />ตั้งแต่ Stored-Program จนถึง MIPS</h1>
+      <div class="menu-hero-stats">
+        <div class="stat"><b>05</b><span>บทเรียน</span></div>
+        <div class="stat"><b>126</b><span>สไลด์ทั้งหมด</span></div>
+        <div class="stat"><b>82</b><span>ข้อสอบ 82 ข้อ</span></div>
+        <div class="stat"><b>100%</b><span>เรียนฟรี</span></div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="menuCtaBtn">เริ่มเรียนเลย <i data-lucide="arrow-down"></i></button>
+    </header>
+
+    <!-- บทเรียน -->
+    <div class="chapter-grid" id="chapterGrid" role="list" aria-label="บทเรียน">
+      <button class="chapter-card unlocked" data-chapter="1" role="listitem">
+        <span class="ch-top"><span class="ch-num">1</span><span class="ch-icon"><i data-lucide="cpu"></i></span></span>
+        <div class="ch-body">
+          <span class="ch-en">Stored-Program Concept &amp; ISA</span>
+          <b class="ch-title">สถาปัตยกรรมคอมพิวเตอร์</b>
+          <p class="ch-desc">ISA · Stored-Program Concept · PC (Program Counter) · MIPS 32 bits · Assembly · Instruction · รูปแบบคำสั่ง R/I/J · ระบบเลขและ Overflow</p>
+          <div class="ch-meta">
+            <span class="chip-sm"><i data-lucide="presentation"></i><b data-slides="1">21</b> สไลด์</span>
+            <span class="chip-sm"><i data-lucide="file-question"></i>ข้อสอบ 20 ข้อ</span>
+          </div>
+          <div class="ch-progress">
+            <div class="ch-bar"><div class="ch-bar-fill"></div></div>
+            <span class="ch-status"><i data-lucide="play"></i>เรียนต่อ <b class="ch-pct" id="ch1Pct">0%</b></span>
+          </div>
+        </div>
+        <i data-lucide="arrow-right" class="ch-go" aria-hidden="true"></i>
+      </button>
+
+      <button class="chapter-card unlocked" data-chapter="2" role="listitem">
+        <span class="ch-top"><span class="ch-num">2</span><span class="ch-icon"><i data-lucide="binary"></i></span></span>
+        <div class="ch-body">
+          <span class="ch-en">MIPS Instruction Formats</span>
+          <b class="ch-title">รูปแบบคำสั่ง MIPS</b>
+          <p class="ch-desc">R / I / J Format · Immediate · lw / sw / lb / lbu · Memory &amp; Data (.word/.byte) · little-endian · trace โปรแกรม q1t8.asm</p>
+          <div class="ch-meta">
+            <span class="chip-sm"><i data-lucide="presentation"></i><b data-slides="2">28</b> สไลด์</span>
+            <span class="chip-sm"><i data-lucide="file-question"></i>ข้อสอบ 10 ข้อ</span>
+          </div>
+          <div class="ch-progress">
+            <div class="ch-bar"><div class="ch-bar-fill"></div></div>
+            <span class="ch-status"><i data-lucide="play"></i>เรียนต่อ <b class="ch-pct" id="ch2Pct">0%</b></span>
+          </div>
+        </div>
+        <i data-lucide="arrow-right" class="ch-go" aria-hidden="true"></i>
+      </button>
+
+      <button class="chapter-card unlocked" data-chapter="3" role="listitem">
+        <span class="ch-top"><span class="ch-num">3</span><span class="ch-icon"><i data-lucide="binary"></i></span></span>
+        <div class="ch-body">
+          <span class="ch-en">Memory, Arithmetic, Shift &amp; Overflow</span>
+          <b class="ch-title">คำสั่ง Memory · คำนวณ · Shift</b>
+          <p class="ch-desc">lw / sw / lb / lbu / sb · add/sub/addi (Overflow) · sll / srl / sra · and / or / xor / nor · andi/ori/li · slt/sltu/sltiu · trace bitwise.asm</p>
+          <div class="ch-meta">
+            <span class="chip-sm"><i data-lucide="presentation"></i><b data-slides="3">29</b> สไลด์</span>
+            <span class="chip-sm"><i data-lucide="file-question"></i>ข้อสอบ 17 ข้อ</span>
+          </div>
+          <div class="ch-progress">
+            <div class="ch-bar"><div class="ch-bar-fill"></div></div>
+            <span class="ch-status"><i data-lucide="play"></i>เรียนต่อ <b class="ch-pct" id="ch3Pct">0%</b></span>
+          </div>
+        </div>
+        <i data-lucide="arrow-right" class="ch-go" aria-hidden="true"></i>
+      </button>
+
+      <button class="chapter-card unlocked" data-chapter="4" role="listitem">
+        <span class="ch-top"><span class="ch-num">4</span><span class="ch-icon"><i data-lucide="binary"></i></span></span>
+        <div class="ch-body">
+          <span class="ch-en">MIPS Instruction Representation</span>
+          <b class="ch-title">การแทนคำสั่งของ MIPS</b>
+          <p class="ch-desc">Stored-Program Concept · R/I/J Format (add $8,$9,$10 → 0x012A4020) · Branch PC-Relative · Jump Absolute · Disassembly · MAL vs TAL · trace fib.asm</p>
+          <div class="ch-meta">
+            <span class="chip-sm"><i data-lucide="presentation"></i><b data-slides="4">24</b> สไลด์</span>
+            <span class="chip-sm"><i data-lucide="file-question"></i>ข้อสอบ 20 ข้อ</span>
+          </div>
+          <div class="ch-progress">
+            <div class="ch-bar"><div class="ch-bar-fill"></div></div>
+            <span class="ch-status"><i data-lucide="play"></i>เรียนต่อ <b class="ch-pct" id="ch4Pct">0%</b></span>
+          </div>
+        </div>
+        <i data-lucide="arrow-right" class="ch-go" aria-hidden="true"></i>
+      </button>
+
+      <button class="chapter-card unlocked" data-chapter="5" role="listitem">
+        <span class="ch-top"><span class="ch-num">5</span><span class="ch-icon"><i data-lucide="gauge"></i></span></span>
+        <div class="ch-body">
+          <span class="ch-en">Performance</span>
+          <b class="ch-title">การวัดประสิทธิภาพของคอมพิวเตอร์</b>
+          <p class="ch-desc">Response Time vs Throughput · CPU time = IC × CPI × Clock Cycle Time · Weighted CPI · Benchmark (SPEC) · Megahertz Myth · Amdahl's Law</p>
+          <div class="ch-meta">
+            <span class="chip-sm"><i data-lucide="presentation"></i><b data-slides="5">24</b> สไลด์</span>
+            <span class="chip-sm"><i data-lucide="file-question"></i>ข้อสอบ 15 ข้อ</span>
+          </div>
+          <div class="ch-progress">
+            <div class="ch-bar"><div class="ch-bar-fill"></div></div>
+            <span class="ch-status"><i data-lucide="play"></i>เรียนต่อ <b class="ch-pct" id="ch5Pct">0%</b></span>
+          </div>
+        </div>
+        <i data-lucide="arrow-right" class="ch-go" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- สรุปภาพรวม -->
+    <div class="test-entry" style="cursor:default">
+      <div class="test-entry-icon"><i data-lucide="sparkles"></i></div>
+      <div class="test-entry-body">
+        <span class="menu-kicker">WHAT YOU WILL LEARN</span>
+        <h3 class="test-entry-title">บทที่ 1–5 — เนื้อหาในหลักสูตร</h3>
+        <p class="test-entry-desc"><b>บทที่ 1:</b> ISA · Stored-Program · PC · MIPS 32 bits · Assembly · รูปแบบ R/I/J · ระบบเลข signed/unsigned, Two's Complement และ Overflow (ข้อสอบ 20 ข้อ) &nbsp;·&nbsp; <b>บทที่ 2:</b> รูปแบบคำสั่ง R/I/J · Immediate · lw/sw/lb/lbu · Memory &amp; Data · trace q1t8.asm (ข้อสอบ 10 ข้อ) &nbsp;·&nbsp; <b>บทที่ 3:</b> lw/sw/lb/lbu/sb · add/sub/addi และ Overflow · sll/srl/sra · and/or/xor/nor · slt/sltu/sltiu · trace bitwise.asm + เขียนคำสั่ง (ข้อสอบ 17 ข้อ พิมพ์คำตอบเอง) &nbsp;·&nbsp; <b>บทที่ 4:</b> Stored-Program · R/I/J Format · Branch/Jump Addressing · Disassembly · MAL vs TAL · trace fib.asm — เรียกซ้ำกับ stack (ข้อสอบ 20 ข้อ พิมพ์คำตอบเอง) &nbsp;·&nbsp; <b>บทที่ 5:</b> Response Time vs Throughput · Performance = 1/เวลา · CPU time = IC × CPI × Clock Cycle Time · CPI ถัวเฉลี่ยถ่วงน้ำหนัก · Benchmark (SPEC CPU2006) · Megahertz Myth · Amdahl's Law (ข้อสอบ 15 ข้อ พิมพ์คำตอบเอง)</p>
+      </div>
+    </div>
+
+    <footer class="menu-foot">
+      <div class="menu-foot-badge"><i data-lucide="sparkles"></i> Chapter 01–05 · ONLINE</div>
+      <span>Interactive Digital Textbook · Computer Architecture</span>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- App scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Interactive Digital Textbook — Computer Architecture / MIPS Instruction Formats" />
+  <title>CA · บทที่ 2 — MIPS Instruction Formats</title>
+
+  <!-- App styles — โหลดก่อนเสมอ (สำคัญต่อการแสดงผล) -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS (Play CDN) — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons — defer: ไม่บล็อกการโหลดหน้าและ app.js -->
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- ส่วนประกอบเคลื่อนไหวเฉพาะ Com Arch บท 2 -->
+  <style>
+    /* ---------- bit layout ของ R / I / J Format ---------- */
+    .bitrow { display: flex; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--glow-blue); }
+    .bitfield { padding: 10px 6px 8px; text-align: center; border-right: 1px solid var(--border); min-width: 0; }
+    .bitfield:last-child { border-right: none; }
+    .bitfield b { display: block; font-size: 11px; letter-spacing: .03em; font-weight: 800; color: var(--text); white-space: nowrap; }
+    .bitfield span { display: block; margin-top: 3px; font-family: Consolas, Monaco, monospace; font-size: 11px; color: var(--text-3); white-space: nowrap; }
+    .bf-op { background: rgba(56, 189, 248, .10); }
+    .bf-op b { color: var(--cyan); }
+    .bf-rs { background: rgba(167, 139, 250, .10); }
+    .bf-rs b { color: var(--violet, #a78bfa); }
+    .bf-rt { background: rgba(52, 211, 153, .10); }
+    .bf-rt b { color: var(--success); }
+    .bf-rd { background: rgba(251, 191, 36, .10); }
+    .bf-rd b { color: var(--warning); }
+    .bf-sh { background: rgba(248, 113, 113, .10); }
+    .bf-sh b { color: var(--danger); }
+    .bf-fn { background: rgba(232, 121, 249, .10); }
+    .bf-fn b { color: #e879f9; }
+    .bf-im { background: rgba(56, 189, 248, .14); }
+    .bf-im b { color: var(--cyan); }
+    .bf-ta { background: rgba(56, 189, 248, .14); }
+    .bf-ta b { color: var(--cyan); }
+    .bit-total { margin-top: 8px; display: flex; justify-content: space-between; font-family: Consolas, Monaco, monospace; font-size: 12px; color: var(--text-3); }
+    .bit-total .eq { color: var(--success); font-weight: 800; }
+
+    /* ---------- กล่องคำสั่ง (assembly code) ---------- */
+    .asm-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; font-family: Consolas, Monaco, monospace; font-size: 13.5px;
+      line-height: 1.8; overflow-x: auto; white-space: pre;
+    }
+    .asm-code .dir { color: #c084fc; }   /* .text .data */
+    .asm-code .lab { color: #c084fc; }   /* myDat: uDat: */
+    .asm-code .ins { color: #60a5fa; }   /* la sw lw lb lbu */
+    .asm-code .reg { color: #f87171; }   /* t0 s0 ... */
+    .asm-code .num { color: #fbbf24; }   /* เลขและ offset */
+    .asm-code .cmt { color: var(--text-3); font-style: italic; }
+
+    /* ---------- byte grid ของหน่วยความจำ (little-endian) ---------- */
+    .byte-grid { display: grid; grid-template-columns: repeat(8, minmax(46px, 1fr)); gap: 6px; }
+    .byte-cell {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      text-align: center; padding: 7px 2px 5px;
+      font-family: Consolas, Monaco, monospace; font-size: 12.5px; color: var(--text-2);
+    }
+    .byte-cell .off { display: block; font-size: 10px; color: var(--text-3); margin-bottom: 2px; }
+    .byte-cell.zero { border-color: rgba(52, 211, 153, .45); color: var(--success); }
+    .byte-cell.hi { border-color: rgba(251, 191, 36, .5); color: var(--warning); }
+    .byte-cell.area { border-style: dashed; }
+    .mem-cap { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11.5px; color: var(--text-3); font-family: Consolas, Monaco, monospace; }
+
+    /* ---------- ตาราง trace ---------- */
+    .trace-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .trace-table th, .trace-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    .trace-table th { background: var(--card-2); font-weight: 700; font-size: 12.5px; }
+    .trace-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+    .trace-table tr:hover td { background: rgba(56, 189, 248, .06); }
+    .trace-table .ans { color: var(--success); font-weight: 800; }
+    .trace-table .ans-neg { color: var(--danger); font-weight: 800; }
+
+    /* ---------- การ์ดฟิลด์ของ R-Format ---------- */
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .field-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; transition: all .25s; }
+    .field-card:hover { transform: translateY(-4px); border-color: var(--cyan); }
+    .field-card .fc-let {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px;
+      font-family: Consolas, Monaco, monospace; font-weight: 800; font-size: 13px; color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--cyan)); margin-bottom: 8px;
+    }
+    .field-card h4 { font-size: 14.5px; font-weight: 800; margin-bottom: 4px; }
+    .field-card p { font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
+
+    /* ---------- format cards (R/I/J) ---------- */
+    .fmt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+    .fmt { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; text-align: center; transition: all .25s; }
+    .fmt:hover { transform: translateY(-5px); border-color: var(--cyan); box-shadow: var(--glow-blue); }
+    .fmt .f-letter {
+      width: 50px; height: 50px; margin: 0 auto 12px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 23px; font-weight: 800; color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
+      animation: caFloat 3.6s ease-in-out infinite;
+    }
+    .fmt:nth-child(2) .f-letter { animation-delay: -1.2s; }
+    .fmt:nth-child(3) .f-letter { animation-delay: -2.4s; }
+    .fmt h4 { font-size: 16px; font-weight: 800; }
+    .fmt .f-en { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); font-weight: 700; margin-bottom: 6px; }
+    .fmt p { font-size: 13px; color: var(--text-3); }
+    @keyframes caFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+    /* ---------- flow แนวตั้ง ---------- */
+    .flow { display: flex; flex-direction: column; align-items: center; }
+    .flow-step {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 24px; min-width: 210px;
+      text-align: center; font-weight: 700; font-size: 15px;
+    }
+    .flow-step small { display: block; color: var(--text-3); font-weight: 500; font-size: 12px; margin-top: 2px; }
+    .flow-arrow { width: 2px; height: 40px; background: linear-gradient(180deg, var(--cyan), var(--indigo)); position: relative; }
+    .flow-arrow::before {
+      content: ""; position: absolute; left: 50%; top: 0;
+      width: 8px; height: 8px; border-radius: 50%; background: var(--cyan);
+      transform: translateX(-50%); box-shadow: 0 0 12px var(--cyan);
+      animation: caDrop 1.6s ease-in-out infinite;
+    }
+    .flow-arrow:nth-child(4)::before { animation-delay: .4s; }
+    .flow-arrow:nth-child(6)::before { animation-delay: .8s; }
+    @keyframes caDrop { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% - 8px); opacity: 0; } }
+
+    /* ---------- memory diagram ---------- */
+    .ca-mem { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; }
+    .ca-mem .addr { font-family: Consolas, Monaco, monospace; color: var(--text-3); font-size: 13px; text-align: right; }
+    .ca-mem .row {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      padding: 7px 14px; border-radius: 8px; font-size: 14px;
+      animation: caMemIn .5s ease both;
+    }
+    .ca-mem .row.dat { border-left-color: var(--warning); }
+    @keyframes caMemIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- lw / sw ---------- */
+    .lwsw { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .lwsw .box {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 18px; font-family: Consolas, Monaco, monospace; font-size: 14px;
+      animation: caFloat 3.4s ease-in-out infinite;
+    }
+    .lwsw .box:nth-child(3) { animation-delay: -1.7s; }
+    .lwsw .arrow { font-size: 22px; color: var(--cyan); animation: caNudge 1.4s ease-in-out infinite; }
+    @keyframes caNudge { 0%,100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
+
+    /* ---------- decision flow (ดูว่าเป็น Format ไหน) ---------- */
+    .decide { display: flex; flex-direction: column; gap: 10px; }
+    .decide .q {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; font-weight: 700; font-size: 14.5px; text-align: center;
+    }
+    .decide .branch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .decide .ans {
+      background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 10px 14px; font-size: 13.5px; color: var(--text-2);
+    }
+    .decide .ans b { color: var(--text); }
+
+    /* ---------- ตารางเปรียบเทียบ R/I/J ---------- */
+    .cmp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .cmp-table th, .cmp-table td { border: 1px solid var(--border); padding: 9px 12px; text-align: center; }
+    .cmp-table th { background: var(--card-2); font-weight: 800; }
+    .cmp-table td { color: var(--text-2); font-family: Consolas, Monaco, monospace; }
+    .cmp-table .c-r { color: var(--cyan); font-weight: 800; }
+    .cmp-table .c-i { color: var(--success); font-weight: 800; }
+    .cmp-table .c-j { color: var(--warning); font-weight: 800; }
+
+    /* ---------- ระบบเลข ---------- */
+    .num-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .num-table th, .num-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+    .num-table th { background: var(--card-2); color: var(--text); font-weight: 700; }
+    .num-table td { color: var(--text-2); }
+    .num-table .hi { color: var(--success); font-weight: 700; }
+    .num-table .lo { color: var(--danger); font-weight: 700; }
+
+    .step-list { display: flex; flex-direction: column; gap: 8px; }
+    .step-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text-2);
+    }
+    .step-box b { color: var(--text); }
+    .step-box code { font-family: Consolas, Monaco, monospace; color: var(--cyan); }
+
+    /* ---------- กล่องโจทย์ในข้อสอบ (สร้างโดย app.js) ---------- */
+    .exam-code {
+      background: rgba(0, 0, 0, .42); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 14px 12px; margin-bottom: 16px;
+      font-family: Consolas, Monaco, monospace; font-size: 13px; line-height: 1.7;
+      overflow-x: auto;
+    }
+    .exam-code .exam-code-cap {
+      font-size: 10px; letter-spacing: .14em; font-weight: 800;
+      color: var(--text-3); margin-bottom: 6px; text-transform: uppercase;
+    }
+    .exam-code .exam-code-line.hl {
+      background: rgba(56, 189, 248, .12); border-radius: 6px;
+      padding: 1px 8px; margin: 0 -8px; box-shadow: inset 2px 0 0 var(--cyan);
+    }
+    .exam-code .asm-ins { color: #60a5fa; }
+    .exam-code .asm-reg { color: #f87171; }
+    .exam-code .asm-num { color: #fbbf24; }
+    .exam-code .asm-dir { color: #c084fc; }
+    .exam-code .asm-lab { color: #c084fc; font-weight: 700; }
+
+    @media (max-width: 640px) {
+      .byte-grid { grid-template-columns: repeat(4, 1fr); }
+      .decide .branch { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-page="chapter" data-chapter="2">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header id="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="เปิดเมนูบทเรียน" title="เมนู">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <div class="brand">
+      <div class="cn-logo" aria-hidden="true">CA</div>
+      <div class="brand-titles">
+        <h1>สถาปัตยกรรมคอมพิวเตอร์</h1>
+        <p id="headerChapterLabel">MIPS Instruction Formats · บทที่ 2</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="icon-btn" id="homeBtn" aria-label="กลับไปเมนูหลัก" title="เมนูหลัก">
+        <i data-lucide="home"></i>
+      </button>
+      <button class="icon-btn" id="notesBtn" aria-label="เปิดบันทึกย่อ" title="บันทึกย่อ (Notes)">
+        <i data-lucide="notebook-pen"></i>
+      </button>
+
+      <div class="header-progress" aria-label="ความคืบหน้า">
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="headerProgressBar">
+          <div class="progress-fill" id="headerProgressFill"></div>
+        </div>
+        <span class="progress-count" id="headerProgressCount">1 / 28</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= SHELL ================= -->
+  <div class="shell">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar" aria-label="เมนูบทเรียน">
+      <div class="sidebar-head">
+        <div class="sidebar-head-title">
+          <h2 id="sidebarChapterTitle">เมนูบทที่ 2</h2>
+          <p id="sidebarChapterSub">หัวข้อในสัปดาห์นี้ · 28 หัวข้อ</p>
+        </div>
+        <button class="icon-btn sidebar-close" id="sidebarCloseBtn" aria-label="ปิดเมนูบทเรียน" title="ปิดเมนู">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="sidebar-info">
+        <i data-lucide="info"></i>
+        <span>คลิกหัวข้อหรือสไลด์เพื่อข้ามไปได้เลย<br />เรียนทีละสไลด์เพื่อเก็บเนื้อหาให้ครบ</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav" aria-label="สารบัญสไลด์"></nav>
+      <div class="sidebar-foot">
+        <div class="sf-top"><span>ความคืบหน้า</span><b id="sidebarPct">0%</b></div>
+        <div class="progress-track"><div class="progress-fill" id="sidebarProgressFill"></div></div>
+        <p class="mt-2 text-3" style="font-size:12px" id="sidebarDone">ยังไม่ได้เรียนสไลด์ใดเลย — เริ่มที่ Cover ได้เลย!</p>
+      </div>
+    </aside>
+
+    <!-- ================= STAGE ================= -->
+    <main class="stage">
+
+      <div class="slide-viewport" id="viewport">
+        <!-- ============ SLIDE 1 · COVER ============ -->
+        <section class="slide-view" data-title="Cover — บทที่ 2: MIPS Instruction Formats" aria-label="สไลด์ 1: เปิดบทเรียน">
+          <div class="slide-inner">
+            <div class="center">
+              <div class="cn-logo float-y" style="width:74px;height:74px;font-size:28px;border-radius:22px;margin:0 auto 18px">CA</div>
+              <p class="slide-eyebrow" style="justify-content:center">COMPUTER ARCHITECTURE · CHAPTER 2</p>
+              <h2 class="slide-title" style="font-size:clamp(30px,5vw,54px);text-align:center">
+                MIPS <span class="grad-text">Instruction Formats</span>
+              </h2>
+              <p class="slide-subtitle" style="text-align:center;margin:6px auto 0;max-width:660px">
+                รูปแบบคำสั่งทั้ง 3 ของ MIPS — R / I / J — พร้อมการอ่านหน่วยความจำ (lb, lbu, lw)
+                และโปรแกรมตัวอย่าง q1t8.asm ที่ออกข้อสอบ
+              </p>
+
+              <div class="stat-chips" style="justify-content:center;margin-top:24px">
+                <span class="stat-chip"><i data-lucide="layers"></i> 28 Slides</span>
+                <span class="stat-chip"><i data-lucide="help-circle"></i> 10 Quiz</span>
+                <span class="stat-chip"><i data-lucide="square-stack"></i> 16 Flashcards</span>
+                <span class="stat-chip"><i data-lucide="book-marked"></i> 28 Glossary</span>
+              </div>
+
+              <button class="btn btn-primary mt-6" id="startBtn" style="font-size:16px;padding:14px 30px">
+                Start Learning <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 2 · ROADMAP ============ -->
+        <section class="slide-view" data-title="เราจะเรียนอะไรบ้าง" aria-label="สไลด์ 2: สิ่งที่จะเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER OVERVIEW</p>
+            <h2 class="slide-title">เราจะเรียนอะไรบ้างในบทนี้?</h2>
+            <p class="slide-subtitle">จากรูปแบบคำสั่ง R / I / J ไปจนถึงการโหลดข้อมูลจาก Memory — ปูพื้นฐานให้อ่านโปรแกรม MIPS ได้จริง</p>
+            <div class="grid-2 mt-6">
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="cpu" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">R-Format</b><p class="card-text small mt-2">opcode | rs | rt | rd | shamt | funct — ใช้กับคำสั่งคำนวณระหว่าง Register เช่น add, sub, slt</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="hash" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">I-Format</b><p class="card-text small mt-2">opcode | rs | rt | immediate — มีตัวเลขฝังในคำสั่ง เช่น addi, lw, sw, beq, bne</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="move-up-right" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">J-Format</b><p class="card-text small mt-2">opcode | target address — ใช้กระโดด เช่น j, jal</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="database" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">Memory &amp; Data</b><p class="card-text small mt-2">.word / .byte, la, little-endian — ข้อมูลถูกเก็บในหน่วยความจำยังไง</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="arrow-down-up" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">lb / lbu / lw</b><p class="card-text small mt-2">โหลดข้อมูล 1 byte / 1 word — sign-extend vs zero-extend</p></div>
+              </div>
+              <div class="card hoverable flex gap-3" style="align-items:flex-start;padding:18px">
+                <i data-lucide="file-code-2" style="width:22px;height:22px;color:var(--cyan);flex-shrink:0;margin-top:2px"></i>
+                <div><b style="font-size:14.5px">q1t8.asm + ข้อสอบ</b><p class="card-text small mt-2">trace โปรแกรมจริงทีละคำสั่ง แล้วสอบท้ายบท 10 ข้อในรูปแบบเดียวกับข้อสอบจริง</p></div>
+              </div>
+            </div>
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>วิธีเรียนที่แนะนำ</b>กด Next ไปทีละสไลด์ สไลด์ 18–20 เป็นหัวใจของข้อสอบท้ายบท — อย่าข้าม!</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 3 · INSTRUCTION คืออะไร ============ -->
+        <section class="slide-view" data-title="Instruction คืออะไร?" aria-label="สไลด์ 3: Instruction คืออะไร">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FUNDAMENTAL CONCEPTS</p>
+            <h2 class="slide-title">Instruction คืออะไร?</h2>
+            <p class="slide-subtitle">Instruction = <b class="cyan">คำสั่งที่บอก CPU ว่าให้ทำอะไร</b> — แต่ CPU ไม่เข้าใจคำว่า add ตรง ๆ</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ตัวอย่าง · add $t0, $t1, $t2</span>
+                <div class="add-demo" style="margin-top:18px">
+                  <span class="reg">$t1</span>
+                  <span class="op">+</span>
+                  <span class="reg">$t2</span>
+                  <span class="op">→</span>
+                  <span class="reg out">$t0</span>
+                </div>
+                <p class="text-3 mt-3" style="text-align:center;font-size:13px"><b>$t0 = $t1 + $t2</b> — นำข้อมูลใน $t1 กับ $t2 มาบวกกัน แล้วเก็บผลลัพธ์ไว้ที่ $t0</p>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">FLOW · ภาษาระดับสูง → CPU</span>
+                <div class="flow" style="margin-top:16px">
+                  <div class="flow-step">Assembly <small>add $t0, $t1, $t2</small></div>
+                  <div class="flow-arrow"></div>
+                  <div class="flow-step">Machine Language <small>000000 01001 01010 01000 00000 100000</small></div>
+                  <div class="flow-arrow"></div>
+                  <div class="flow-step">CPU <small>อ่าน 32 bits แล้วทำตาม</small></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>สุดท้ายแล้วคำสั่งถูกเก็บเป็น <b class="cyan">Binary 32 bits</b> — MIPS จึงต้องกำหนดว่าทั้ง 32 bits แต่ละตำแหน่งเก็บอะไรบ้าง นั่นคือ <b>Instruction Format</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 4 · 3 รูปแบบหลัก ============ -->
+        <section class="slide-view" data-title="MIPS มี 3 รูปแบบหลัก" aria-label="สไลด์ 4: 3 รูปแบบหลัก">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MIPS INSTRUCTION FORMATS</p>
+            <h2 class="slide-title">MIPS มี 3 รูปแบบหลัก <span class="grad-text">⭐ จำ 3 ตัวนี้ก่อนเลย</span></h2>
+            <p class="slide-subtitle">ทุกคำสั่ง MIPS ตกอยู่ในรูปแบบใดรูปแบบหนึ่งจากทั้งหมด 3 รูปแบบนี้</p>
+
+            <div class="fmt-grid mt-6">
+              <div class="fmt">
+                <div class="f-letter">R</div>
+                <p class="f-en">R = Register</p>
+                <h4>R-Format</h4>
+                <p>คำนวณระหว่าง Register<br /><code style="font-size:12px">add · sub · slt</code></p>
+              </div>
+              <div class="fmt">
+                <div class="f-letter">I</div>
+                <p class="f-en">I = Immediate</p>
+                <h4>I-Format</h4>
+                <p>มีตัวเลข / Memory / Branch<br /><code style="font-size:12px">addi · lw · sw · beq · bne</code></p>
+              </div>
+              <div class="fmt">
+                <div class="f-letter">J</div>
+                <p class="f-en">J = Jump</p>
+                <h4>J-Format</h4>
+                <p>กระโดดไปตำแหน่งอื่น<br /><code style="font-size:12px">j · jal</code></p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำประโยคนี้ให้ขึ้นใจ</b><b class="cyan"> R = Register · I = Immediate · J = Jump</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 5 · R-FORMAT โครงสร้าง ============ -->
+        <section class="slide-view" data-title="R-Format — โครงสร้าง" aria-label="สไลด์ 5: R-Format โครงสร้าง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 1 · R-FORMAT ⭐⭐⭐</p>
+            <h2 class="slide-title">R-Format — <span class="grad-text">โครงสร้าง</span></h2>
+            <p class="slide-subtitle">ใช้กับคำสั่งที่ทำงานกับ <b class="cyan">Register</b> เป็นหลัก — 6 ช่องรวมกันเป็น 32 bits</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">R-FORMAT · 32 BITS</span>
+              <div class="bitrow mt-3">
+                <div class="bitfield bf-op" style="flex:6"><b>opcode</b><span>6 bits</span></div>
+                <div class="bitfield bf-rs" style="flex:5"><b>rs</b><span>5 bits</span></div>
+                <div class="bitfield bf-rt" style="flex:5"><b>rt</b><span>5 bits</span></div>
+                <div class="bitfield bf-rd" style="flex:5"><b>rd</b><span>5 bits</span></div>
+                <div class="bitfield bf-sh" style="flex:5"><b>shamt</b><span>5 bits</span></div>
+                <div class="bitfield bf-fn" style="flex:6"><b>funct</b><span>6 bits</span></div>
+              </div>
+              <div class="bit-total"><span>opcode(6) + rs(5) + rt(5) + rd(5) + shamt(5) + funct(6)</span><span class="eq">= 32 bits</span></div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="file-code" class="cyan"></i>ตัวอย่าง</h3>
+                <p class="card-text small"><code>add $t0, $t1, $t2</code> — opcode = 0 และ funct = 32 (สำหรับ add) ช่องอื่นบอกว่าใช้ Register ตัวไหน</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="ruler" class="cyan"></i>รวมต้องได้ 32</h3>
+                <p class="card-text small">6 + 5 + 5 + 5 + 5 + 6 = <b class="cyan">32 bits = 4 bytes</b> — ทุกคำสั่ง MIPS มีขนาดเท่ากันเสมอ</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 6 · แต่ละช่องของ R-Format ============ -->
+        <section class="slide-view" data-title="แต่ละช่องของ R-Format" aria-label="สไลด์ 6: ช่อง R-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 1 · R-FORMAT</p>
+            <h2 class="slide-title">แต่ละช่องของ R-Format มีหน้าที่อะไร?</h2>
+            <p class="slide-subtitle">ดูจากตัวอย่าง <code>add $t0, $t1, $t2</code> — <b class="cyan">add rd, rs, rt</b> หรือ <b class="cyan">rd = rs + rt</b></p>
+
+            <div class="field-grid mt-6">
+              <div class="field-card">
+                <span class="fc-let">6b</span>
+                <h4>opcode</h4>
+                <p><b>Operation Code</b> — บอกว่าคำสั่งประเภทไหน เช่น R-Format ใช้ opcode = 0 แล้วให้ funct ช่วยบอกคำสั่งที่แน่นอน</p>
+              </div>
+              <div class="field-card">
+                <span class="fc-let">5b</span>
+                <h4>rs</h4>
+                <p><b>Register ตัวที่ 1 (input)</b> — ใน add $t0,$t1,$t2 ตัวนี้คือ <code>$t1</code></p>
+              </div>
+              <div class="field-card">
+                <span class="fc-let">5b</span>
+                <h4>rt</h4>
+                <p><b>Register ตัวที่ 2 (input)</b> — จากตัวอย่างคือ <code>$t2</code></p>
+              </div>
+              <div class="field-card">
+                <span class="fc-let">5b</span>
+                <h4>rd</h4>
+                <p><b>Register ปลายทาง</b> — ที่เก็บผลลัพธ์ จากตัวอย่างคือ <code>$t0</code></p>
+              </div>
+              <div class="field-card">
+                <span class="fc-let">5b</span>
+                <h4>shamt</h4>
+                <p><b>Shift Amount</b> — บอกว่าจะ Shift กี่ตำแหน่ง เจอในคำสั่ง Shift เช่น <code>sll</code></p>
+              </div>
+              <div class="field-card">
+                <span class="fc-let">6b</span>
+                <h4>funct</h4>
+                <p><b>Function</b> — ระบุ operation ที่แน่นอน เช่น add, sub → ต้องดูทั้ง <b>opcode + funct</b></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 7 · ตัวอย่าง R-Format ============ -->
+        <section class="slide-view" data-title="ตัวอย่าง R-Format" aria-label="สไลด์ 7: ตัวอย่าง R-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 1 · R-FORMAT</p>
+            <h2 class="slide-title">ตัวอย่าง R-Format — <span class="grad-text">add $8, $9, $10</span></h2>
+            <p class="slide-subtitle">ความหมายคือ <b class="cyan">$8 = $9 + $10</b> — เอาค่าใน $9 กับ $10 มาบวกกัน เก็บผลลัพธ์ที่ $8</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ADD $8, $9, $10 · จับคู่ช่องแต่ละฟิลด์</span>
+              <div class="bitrow mt-3">
+                <div class="bitfield bf-op" style="flex:6"><b>opcode</b><span>0</span></div>
+                <div class="bitfield bf-rs" style="flex:5"><b>rs</b><span>9</span></div>
+                <div class="bitfield bf-rt" style="flex:5"><b>rt</b><span>10</span></div>
+                <div class="bitfield bf-rd" style="flex:5"><b>rd</b><span>8</span></div>
+                <div class="bitfield bf-sh" style="flex:5"><b>shamt</b><span>0</span></div>
+                <div class="bitfield bf-fn" style="flex:6"><b>funct</b><span>32</span></div>
+              </div>
+              <div class="bit-total"><span>rs = 9 · rt = 10 · rd = 8 · opcode = 0 · funct = 32 (add)</span><span class="eq">32 bits</span></div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำง่ายสุด</b><b class="cyan"> add rd, rs, rt</b> → <b class="cyan">rd = rs + rt</b> — rd มาก่อนเสมอ!</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 8 · I-FORMAT โครงสร้าง ============ -->
+        <section class="slide-view" data-title="I-Format — โครงสร้าง" aria-label="สไลด์ 8: I-Format โครงสร้าง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2 · I-FORMAT ⭐⭐⭐</p>
+            <h2 class="slide-title">I-Format — <span class="grad-text">โครงสร้าง</span></h2>
+            <p class="slide-subtitle">I = Immediate — มีค่าตัวเลขฝังอยู่ในคำสั่ง จึงมีช่อง immediate 16 bits</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">I-FORMAT · 32 BITS</span>
+              <div class="bitrow mt-3">
+                <div class="bitfield bf-op" style="flex:6"><b>opcode</b><span>6 bits</span></div>
+                <div class="bitfield bf-rs" style="flex:5"><b>rs</b><span>5 bits</span></div>
+                <div class="bitfield bf-rt" style="flex:5"><b>rt</b><span>5 bits</span></div>
+                <div class="bitfield bf-im" style="flex:16"><b>immediate</b><span>16 bits</span></div>
+              </div>
+              <div class="bit-total"><span>opcode(6) + rs(5) + rt(5) + immediate(16)</span><span class="eq">= 32 bits</span></div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="list" class="cyan"></i>คำสั่งกลุ่ม I-Format</h3>
+                <p class="card-text small"><code>addi · lw · sw · beq · bne</code> — คำสั่งที่มี Immediate / Offset / Branch displacement</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="ruler" class="cyan"></i>รวมต้องได้ 32</h3>
+                <p class="card-text small">6 + 5 + 5 + 16 = <b class="cyan">32 bits</b> — immediate กินเนื้อที่เยอะสุด (16 bits)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 9 · IMMEDIATE คืออะไร ============ -->
+        <section class="slide-view" data-title="Immediate คืออะไร?" aria-label="สไลด์ 9: Immediate">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2 · I-FORMAT</p>
+            <h2 class="slide-title">Immediate คืออะไร?</h2>
+            <p class="slide-subtitle">Immediate = <b class="cyan">ค่าตัวเลขที่อยู่ในคำสั่งโดยตรง</b> — ไม่ต้องไปเอาจาก Register</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ADDI $t0, $t1, 10</span>
+              <div class="add-demo" style="margin-top:18px">
+                <span class="reg">$t1</span>
+                <span class="op">+</span>
+                <span class="reg" style="border-color:var(--warning);color:var(--warning)">10</span>
+                <span class="op">→</span>
+                <span class="reg out">$t0</span>
+              </div>
+              <p class="text-3 mt-3" style="text-align:center;font-size:13.5px">ตรงนี้ <b class="warning" style="color:var(--warning)">10</b> คือ Immediate → <b>$t0 = $t1 + 10</b></p>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ทำไมต้องมี immediate?</b>เพราะบางครั้งเราก็แค่อยากบวกค่าคงที่ — ฝังเลข 10 ไว้ในคำสั่งเลย ไม่ต้องเสียเวลาโหลดจาก Register หรือ Memory</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 10 · ตัวอย่าง I-Format ============ -->
+        <section class="slide-view" data-title="ตัวอย่าง I-Format" aria-label="สไลด์ 10: ตัวอย่าง I-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2 · I-FORMAT</p>
+            <h2 class="slide-title">ตัวอย่าง I-Format — <span class="grad-text">addi $21, $22, -50</span></h2>
+            <p class="slide-subtitle">หมายถึง <b class="cyan">$21 = $22 + (-50)</b> — สังเกตว่า addi ใช้ Immediate จึงเป็น I-Format</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ADDI $21, $22, -50 · จับคู่ช่องแต่ละฟิลด์</span>
+              <div class="bitrow mt-3">
+                <div class="bitfield bf-op" style="flex:6"><b>opcode</b><span>addi</span></div>
+                <div class="bitfield bf-rs" style="flex:5"><b>rs</b><span>$22</span></div>
+                <div class="bitfield bf-rt" style="flex:5"><b>rt</b><span>$21</span></div>
+                <div class="bitfield bf-im" style="flex:16"><b>immediate</b><span>-50</span></div>
+              </div>
+              <div class="bit-total"><span>rs = $22 · rt = $21 · immediate = -50</span><span class="eq">$21 = $22 + (-50)</span></div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ระวัง!</b>ใน addi ตัวที่อยู่หน้าสุด (<code>$21</code>) คือ <b>rt</b> ไม่ใช่ rd — เพราะ I-Format ไม่มีช่อง rd</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 11 · คำสั่ง I-Format ที่ควรรู้ ============ -->
+        <section class="slide-view" data-title="คำสั่ง I-Format ที่ควรรู้" aria-label="สไลด์ 11: คำสั่ง I-Format">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2 · I-FORMAT</p>
+            <h2 class="slide-title">คำสั่งที่ใช้ I-Format ที่ควรรู้</h2>
+            <p class="slide-subtitle">จำกลุ่มหลัก 5 ตัวนี้ — เพราะมี Immediate / Offset / Branch displacement อยู่ในรูปแบบ I-Format</p>
+
+            <div class="grid-2 mt-6">
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="plus" class="cyan"></i>addi</h3><p class="card-text small">Add Immediate — <code>$rt = $rs + immediate</code> เช่น addi $t0,$t1,10</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="download" class="cyan"></i>lw</h3><p class="card-text small">Load Word — โหลดจาก Memory เข้า Register ใช้ offset 16 บิต</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="upload" class="cyan"></i>sw</h3><p class="card-text small">Store Word — เก็บจาก Register ลง Memory ใช้ offset 16 บิต</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="git-branch" class="cyan"></i>beq</h3><p class="card-text small">Branch if EQual — กระโดดถ้า <code>rs == rt</code> ใช้ branch displacement</p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="git-branch" class="cyan"></i>bne</h3><p class="card-text small">Branch if Not Equal — กระโดดถ้า <code>rs != rt</code></p></div>
+              <div class="card hoverable"><h3 class="card-title"><i data-lucide="hash" class="cyan"></i>immediate / offset</h3><p class="card-text small">ค่าคงที่ 16 bits ที่ฝังในคำสั่ง — ใช้เป็นตัวเลข บวก/ลบ หรือ offset ของ Memory</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 12 · I-FORMAT กับ Memory ============ -->
+        <section class="slide-view" data-title="I-Format กับ Memory — lw / sw" aria-label="สไลด์ 12: lw / sw">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 2 · I-FORMAT</p>
+            <h2 class="slide-title">I-Format กับ Memory — <span class="grad-text">lw / sw</span></h2>
+            <p class="slide-subtitle">lw = โหลดจาก Memory เข้า Register · sw = เก็บจาก Register ลง Memory</p>
+
+            <div class="grid-2 mt-6">
+              <div class="visual-box">
+                <span class="vb-label">LW $t0, 4($s1) · Memory → Register</span>
+                <div class="lwsw" style="margin-top:16px">
+                  <span class="box">Memory<br /><small style="color:var(--text-3)">$s1 + 4</small></span>
+                  <span class="arrow">→</span>
+                  <span class="box">$t0</span>
+                </div>
+                <p class="text-3 mt-3" style="text-align:center;font-size:13px">ไปที่ Memory โดยใช้ <b>$s1</b> เป็นจุดเริ่มต้น + <b>offset 4</b> แล้วโหลดข้อมูลมาใส่ <b>$t0</b></p>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">SW $t0, 4($s1) · Register → Memory</span>
+                <div class="lwsw" style="margin-top:16px">
+                  <span class="box">$t0</span>
+                  <span class="arrow">→</span>
+                  <span class="box">Memory<br /><small style="color:var(--text-3)">$s1 + 4</small></span>
+                </div>
+                <p class="text-3 mt-3" style="text-align:center;font-size:13px">เอาข้อมูลจาก <b>$t0</b> ไปเก็บใน Memory ที่ตำแหน่ง <b>offset 4</b> จาก <b>$s1</b></p>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำคู่นี้</b><b class="cyan"> lw = Memory → Register</b> · <b class="cyan">sw = Register → Memory</b> — l มา (Load) ก่อน s (Store)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · J-FORMAT ============ -->
+        <section class="slide-view" data-title="J-Format — โครงสร้าง" aria-label="สไลด์ 13: J-Format โครงสร้าง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 3 · J-FORMAT ⭐⭐</p>
+            <h2 class="slide-title">J-Format — <span class="grad-text">โครงสร้าง</span></h2>
+            <p class="slide-subtitle">J = Jump — ใช้กับคำสั่งกระโดดไปตำแหน่งอื่น เช่น <code>j label</code> และ <code>jal function</code></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">J-FORMAT · 32 BITS</span>
+              <div class="bitrow mt-3">
+                <div class="bitfield bf-op" style="flex:6"><b>opcode</b><span>6 bits</span></div>
+                <div class="bitfield bf-ta" style="flex:26"><b>target address</b><span>26 bits</span></div>
+              </div>
+              <div class="bit-total"><span>opcode(6) + target address(26)</span><span class="eq">= 32 bits</span></div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="move-up-right" class="cyan"></i>j label</h3>
+                <p class="card-text small">Jump — กระโดดไปที่ตำแหน่งของ label โดยไม่สนใจเงื่อนไข</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="log-in" class="cyan"></i>jal function</h3>
+                <p class="card-text small">Jump And Link — เก็บตำแหน่งที่จะกลับ แล้วกระโดดไป function</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 14 · J คืออะไร ============ -->
+        <section class="slide-view" data-title="j คืออะไร?" aria-label="สไลด์ 14: j = Jump">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 3 · J-FORMAT</p>
+            <h2 class="slide-title">j คืออะไร? <span class="grad-text">(Jump)</span></h2>
+            <p class="slide-subtitle">j Loop = กระโดดไปที่ตำแหน่งของ Loop — <b class="cyan">ไม่ได้สนใจว่าเงื่อนไขเป็นจริงหรือไม่</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตัวอย่าง · J LOOP</span>
+              <div class="flow" style="margin-top:16px">
+                <div class="flow-step">คำสั่งก่อนหน้า</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step" style="border-color:var(--warning);color:var(--warning)">j Loop <small>กระโดดไปที่ Loop</small></div>
+                <div class="flow-arrow"></div>
+                <div class="flow-step">Loop: <small>คำสั่งต่อไปที่ CPU จะทำ</small></div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b><b class="cyan"> j = Jump</b> — กระโดดแบบไม่มีเงื่อนไข ไม่เก็บอะไรไว้สำหรับกลับมา</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 15 · JAL ============ -->
+        <section class="slide-view" data-title="jal คืออะไร?" aria-label="สไลด์ 15: jal">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FORMAT 3 · J-FORMAT</p>
+            <h2 class="slide-title">jal คืออะไร? <span class="grad-text">(Jump And Link)</span></h2>
+            <p class="slide-subtitle">jal ทำ 2 อย่าง — <b class="cyan">เก็บ Address กลับไว้ที่ $ra</b> แล้ว <b class="cyan">กระโดดไป function</b></p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">STEP 1 · เก็บตำแหน่งที่จะกลับ</span>
+                <div class="step-list" style="margin-top:14px">
+                  <div class="step-box"><b>Address ของคำสั่งถัดไป</b> ถูกเก็บไว้ใน <code>$ra</code> (Return Address)</div>
+                  <div class="step-box">เช่น ถ้าคำสั่ง jal อยู่ที่ 1000 → <code>$ra = 1004</code> (คำสั่งถัดไป)</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">STEP 2 · กระโดดไป Function</span>
+                <div class="step-list" style="margin-top:14px">
+                  <div class="step-box"><b>jal sum</b> → CPU กระโดดไปยังคำสั่งแรกของ <code>sum</code></div>
+                  <div class="step-box">เมื่อ function ทำงานเสร็จ ใช้ <code>jr $ra</code> กลับมาทำต่อจากที่เดิม</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>ต่างจาก j ยังไง?</b>j กระโดดอย่างเดียว (ไปแล้วไม่กลับ) · jal จำไว้เสมอว่าจะต้องกลับมาที่ไหน (เก็บที่ $ra)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 16 · เปรียบเทียบ R/I/J ============ -->
+        <section class="slide-view" data-title="เปรียบเทียบ R / I / J" aria-label="สไลด์ 16: เทียบ R/I/J">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">COMPARE FORMATS</p>
+            <h2 class="slide-title">เปรียบเทียบ R / I / J</h2>
+            <p class="slide-subtitle">อันนี้ควรจำให้ขึ้นใจเลยครับ — โครงสร้าง + คำสั่งตัวอย่างของแต่ละรูปแบบ</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">SUMMARY TABLE</span>
+              <table class="cmp-table mt-3">
+                <tr><th></th><th class="c-r">R-Format</th><th class="c-i">I-Format</th><th class="c-j">J-Format</th></tr>
+                <tr><td><b>ความหมาย</b></td><td class="c-r">Register</td><td class="c-i">Immediate</td><td class="c-j">Jump</td></tr>
+                <tr><td><b>โครงสร้าง</b></td><td>opcode|rs|rt|rd|shamt|funct</td><td>opcode|rs|rt|imm</td><td>opcode|target</td></tr>
+                <tr><td><b>คำสั่ง</b></td><td>add · sub · slt</td><td>addi · lw · sw · beq · bne</td><td>j · jal</td></tr>
+                <tr><td><b>ใช้ทำอะไร</b></td><td>คำนวณระหว่าง Register</td><td>ตัวเลขคงที่ / Memory / Branch</td><td>กระโดดไปตำแหน่งอื่น</td></tr>
+              </table>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำประโยคเดียว</b><b class="cyan"> R = Register, I = Immediate, J = Jump</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 17 · วิธีดูว่าเป็น Format ไหน ============ -->
+        <section class="slide-view" data-title="วิธีดูว่าเป็น Format ไหน" aria-label="สไลด์ 17: ดู Format ยังไง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">ANALYZE FORMATS</p>
+            <h2 class="slide-title">วิธีดูว่า Instruction เป็น Format ไหน</h2>
+            <p class="slide-subtitle">เวลาเจอคำสั่ง ให้ถามตัวเอง 3 คำถาม ตามลำดับนี้</p>
+
+            <div class="decide mt-6">
+              <div class="q">❓ มีการคำนวณระหว่าง Register หรือไม่? <span class="text-3" style="font-weight:500">เช่น add $t0,$t1,$t2</span></div>
+              <div class="branch">
+                <div class="ans">ใช่ → <b class="cyan">R-Format</b><br /><small>opcode|rs|rt|rd|shamt|funct</small></div>
+                <div class="ans">ไม่ใช่ → ถามคำถามต่อไป ↓</div>
+              </div>
+              <div class="q">❓ มีตัวเลขอยู่ในคำสั่ง หรือแตะ Memory / Branch หรือไม่? <span class="text-3" style="font-weight:500">เช่น addi $t0,$t1,10</span></div>
+              <div class="branch">
+                <div class="ans">ใช่ → <b class="success" style="color:var(--success)">I-Format</b><br /><small>opcode|rs|rt|immediate</small></div>
+                <div class="ans">ไม่ใช่ → ถามคำถามสุดท้าย ↓</div>
+              </div>
+              <div class="q">❓ เป็นคำสั่งกระโดดหรือไม่? <span class="text-3" style="font-weight:500">เช่น j Loop</span></div>
+              <div class="branch">
+                <div class="ans">ใช่ → <b class="warning" style="color:var(--warning)">J-Format</b><br /><small>opcode|target address</small></div>
+                <div class="ans">—</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 18 · MEMORY & DATA ============ -->
+        <section class="slide-view" data-title="Memory & Data ใน MIPS" aria-label="สไลด์ 18: Memory & .word/.byte">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">MEMORY &amp; DATA ⭐⭐⭐</p>
+            <h2 class="slide-title">Memory &amp; Data ใน MIPS</h2>
+            <p class="slide-subtitle">โปรแกรมมี 2 ส่วน — <b class="cyan">.text</b> (คำสั่ง) และ <b class="cyan">.data</b> (ข้อมูล) — <code>la</code> ใช้โหลด Address ของ label</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ไดเรกทีฟข้อมูล</span>
+                <div class="step-list" style="margin-top:14px">
+                  <div class="step-box"><code>.word 0xabcd1234</code> — ข้อมูล 1 คำ <b>4 bytes</b></div>
+                  <div class="step-box"><code>.byte 11,12,13</code> — ข้อมูล <b>1 byte ต่อตัว</b> ไล่เรียงกัน</div>
+                  <div class="step-box"><code>la t0, myDat</code> — เอาตำแหน่งของ label <b>myDat</b> ใส่ $t0</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">จับมือเก็บ LITTLE-ENDIAN · 0xabcd1234</span>
+                <div class="step-list" style="margin-top:12px">
+                  <div class="step-box"><b>1.</b> เขียนเลขเป็นคู่ ๆ: <code>ab cd 12 34</code> (จากซ้ายไปขวา)</div>
+                  <div class="step-box"><b>2.</b> little-endian = <b>เอา byte ท้ายสุดมาก่อน</b>: เริ่มจาก <code>34</code> ไปจนถึง <code>ab</code></div>
+                  <div class="step-box"><b>3.</b> เก็บเรียงลง Memory: <code>34 12 cd ab</code> — <b>ตัวแรกที่เจอ = 0x34</b></div>
+                </div>
+                <div class="byte-grid" style="margin-top:12px">
+                  <div class="byte-cell hi"><span class="off">+0</span>34</div>
+                  <div class="byte-cell hi"><span class="off">+1</span>12</div>
+                  <div class="byte-cell hi"><span class="off">+2</span>cd</div>
+                  <div class="byte-cell hi"><span class="off">+3</span>ab</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>ออกข้อสอบบ่อย!</b>เวลา <code>lb</code> จาก <code>myDat</code> ต้องอ่านจาก memory ที่เรียง <b>34, 12, cd, ab</b> — ตัวแรกที่เจอคือ 0x34 ไม่ใช่ 0xab</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 19 · lb / lbu / lw ============ -->
+        <section class="slide-view" data-title="lb / lbu / lw — การโหลดข้อมูล" aria-label="สไลด์ 19: lb / lbu / lw">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">LOAD INSTRUCTIONS ⭐⭐⭐</p>
+            <h2 class="slide-title">lb / lbu / lw — <span class="grad-text">การโหลดข้อมูล</span></h2>
+            <p class="slide-subtitle">lw โหลด 4 bytes (ต้องจัดตำแหน่ง) · lb กับ lbu โหลด 1 byte — ต่างกันที่<b class="cyan">การขยายเครื่องหมาย</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">SIGN-EXTEND vs ZERO-EXTEND (โหลด byte → 32 bits)</span>
+              <table class="num-table mt-3">
+                <tr><th>คำสั่ง</th><th>โหลด</th><th>ขยาย</th><th>ผลลัพธ์</th></tr>
+                <tr><td>lw</td><td>4 bytes (1 word)</td><td>—</td><td>32 bits เต็ม</td></tr>
+                <tr><td>lb</td><td>1 byte</td><td>sign-extend (เติมตาม bit เครื่องหมาย)</td><td class="hi">0x34 → 0x00000034 · 0xab → 0xffffffab</td></tr>
+                <tr><td>lbu</td><td>1 byte</td><td>zero-extend (เติม 0 หน้าเสมอ)</td><td class="hi">0xcd → 0x000000cd</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="minus" class="cyan"></i>lb — sign-extend (จับมือ)</h3>
+                <div class="step-list" style="margin-top:8px">
+                  <div class="step-box"><b>1.</b> โหลด 1 byte เช่น <code>0xab</code> = <code>1010 1011</code></div>
+                  <div class="step-box"><b>2.</b> ดูบิตซ้ายสุด (MSB) = <b class="danger">1</b> → เติมเลข <b class="danger">1</b> หน้า 24 ตัว</div>
+                  <div class="step-box"><b>3.</b> ได้ <code>1111...1010 1011</code> = <b class="ans-neg" style="color:var(--danger)">0xffffffab</b> (ค่าลบ)</div>
+                </div>
+                <p class="card-text small mt-3">ถ้า MSB = 0 (เช่น 0x34) → เติม 0 → 0x00000034 (บวก)</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="plus" class="cyan"></i>lbu — zero-extend (จับมือ)</h3>
+                <div class="step-list" style="margin-top:8px">
+                  <div class="step-box"><b>1.</b> โหลด 1 byte เช่น <code>0xcd</code> = <code>1100 1101</code></div>
+                  <div class="step-box"><b>2.</b> เติม <b>0</b> หน้า 24 ตัวเสมอ (ไม่ดู MSB)</div>
+                  <div class="step-box"><b>3.</b> ได้ <code>0000...1100 1101</code> = <b class="ans-ok">0x000000cd</b> (บวกเสมอ)</div>
+                </div>
+                <p class="card-text small mt-3">เหมาะกับข้อมูลที่อยากได้ค่า unsigned (0..255)</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 20 · q1t8.asm ============ -->
+        <section class="slide-view" data-title="ตัวอย่างโปรแกรม q1t8.asm" aria-label="สไลด์ 20: q1t8.asm">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TRACE PROGRAM ⭐⭐⭐⭐⭐</p>
+            <h2 class="slide-title">ตัวอย่างโปรแกรม <span class="grad-text">q1t8.asm</span></h2>
+            <p class="slide-subtitle">โปรแกรมที่ใช้ในข้อสอบท้ายบท — อ่านทีละคำสั่ง พร้อมดูหน่วยความจำ (little-endian)</p>
+
+            <div class="split mt-6" style="grid-template-columns:1.1fr 1fr">
+              <div class="visual-box">
+                <span class="vb-label">Q1T8.ASM</span>
+                <div class="asm-code mt-3"><span class="dir">.text</span>
+<span class="ins">la</span> <span class="reg">t0</span>,<span class="lab">myDat</span>
+<span class="ins">la</span> <span class="reg">t1</span>,<span class="lab">uDat</span>
+<span class="ins">sw</span> <span class="reg">s0</span>,<span class="num">4</span>(<span class="reg">t0</span>)
+<span class="ins">lw</span> <span class="reg">s0</span>,<span class="num">4</span>(<span class="reg">t0</span>)
+<span class="ins">lb</span> <span class="reg">s1</span>,<span class="num">0</span>(<span class="reg">t0</span>)
+<span class="ins">lb</span> <span class="reg">s2</span>,<span class="num">1</span>(<span class="reg">t0</span>)
+<span class="ins">lbu</span> <span class="reg">s3</span>,<span class="num">2</span>(<span class="reg">t0</span>)
+<span class="ins">lb</span> <span class="reg">s4</span>,<span class="num">5</span>(<span class="reg">t0</span>)
+<span class="ins">lb</span> <span class="reg">s5</span>,<span class="num">-5</span>(<span class="reg">t1</span>)
+<span class="ins">lb</span> <span class="reg">s6</span>,<span class="num">-7</span>(<span class="reg">t1</span>)
+<span class="ins">lb</span> <span class="reg">s7</span>,<span class="num">18</span>(<span class="reg">t0</span>)
+<span class="dir">.data</span>
+<span class="lab">myDat:</span> <span class="dir">.word</span> <span class="num">0xabcd1234,0x12345678</span>
+<span class="lab">uDat:</span> <span class="dir">.byte</span> <span class="num">11,12,13,14,15,16,17,18,19,20</span></div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">หน่วยความจำ · หลังคำสั่ง sw s0,4(t0) (s0 = 0)</span>
+                <div class="byte-grid" style="margin-top:14px">
+                  <div class="byte-cell hi"><span class="off">myDat+0</span>34</div>
+                  <div class="byte-cell hi"><span class="off">+1</span>12</div>
+                  <div class="byte-cell hi"><span class="off">+2</span>cd</div>
+                  <div class="byte-cell hi"><span class="off">+3</span>ab</div>
+                  <div class="byte-cell zero"><span class="off">+4</span>00</div>
+                  <div class="byte-cell zero"><span class="off">+5</span>00</div>
+                  <div class="byte-cell zero"><span class="off">+6</span>00</div>
+                  <div class="byte-cell zero"><span class="off">+7</span>00</div>
+                  <div class="byte-cell"><span class="off">uDat+0</span>11</div>
+                  <div class="byte-cell"><span class="off">+1</span>12</div>
+                  <div class="byte-cell"><span class="off">+2</span>13</div>
+                  <div class="byte-cell"><span class="off">+3</span>14</div>
+                  <div class="byte-cell"><span class="off">+4</span>15</div>
+                  <div class="byte-cell"><span class="off">+5</span>16</div>
+                  <div class="byte-cell"><span class="off">+6</span>17</div>
+                  <div class="byte-cell"><span class="off">+7</span>18</div>
+                  <div class="byte-cell"><span class="off">+8</span>19</div>
+                  <div class="byte-cell"><span class="off">+9</span>20</div>
+                </div>
+                <div class="mem-cap"><span>myDat = 8 bytes (.word 2 ตัว)</span><span>uDat = 10 bytes (.byte)</span></div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-note mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จุดที่ต้องรู้</b><code>uDat - 5</code> = <code>myDat + 3</code> (uDat วางต่อจาก myDat พอดี) · <code>myDat + 18</code> = เกิน uDat ไป 1 ตำแหน่ง (พื้นที่ว่าง = 0)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 21 · TRACE TABLE ============ -->
+        <section class="slide-view" data-title="q1t8.asm — ไล่ทีละคำสั่ง" aria-label="สไลด์ 21: trace ทีละคำสั่ง">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">TRACE STEP-BY-STEP ⭐⭐⭐⭐⭐</p>
+            <h2 class="slide-title">q1t8.asm — <span class="grad-text">ไล่ทีละคำสั่ง</span></h2>
+            <p class="slide-subtitle">ผลลัพธ์ของแต่ละ register ตรงกับข้อสอบท้ายบททุกข้อ — ลองทายคำตอบก่อนดูเฉลย</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">TRACE TABLE</span>
+              <table class="trace-table mt-3">
+                <tr><th>คำสั่ง</th><th>อ่านจาก</th><th>byte</th><th>ขยาย</th><th>ผลลัพธ์</th></tr>
+                <tr><td>lw s0, 4(t0)</td><td>myDat+4..7</td><td>00 00 00 00</td><td>—</td><td class="ans">s0 = 0x00000000</td></tr>
+                <tr><td>lb s1, 0(t0)</td><td>myDat+0</td><td>0x34</td><td>sign (MSB=0)</td><td class="ans">s1 = 0x00000034</td></tr>
+                <tr><td>lb s2, 1(t0)</td><td>myDat+1</td><td>0x12</td><td>sign (MSB=0)</td><td class="ans">s2 = 0x00000012</td></tr>
+                <tr><td>lbu s3, 2(t0)</td><td>myDat+2</td><td>0xcd</td><td>zero</td><td class="ans">s3 = 0x000000cd</td></tr>
+                <tr><td>lb s4, 5(t0)</td><td>myDat+5</td><td>0x00</td><td>sign (MSB=0)</td><td class="ans">s4 = 0x00000000</td></tr>
+                <tr><td>lb s5, -5(t1)</td><td>myDat+3</td><td>0xab</td><td>sign (MSB=1!)</td><td class="ans-neg">s5 = 0xffffffab</td></tr>
+                <tr><td>lb s6, -7(t1)</td><td>myDat+1</td><td>0x12</td><td>sign (MSB=0)</td><td class="ans">s6 = 0x00000012</td></tr>
+                <tr><td>lb s7, 18(t0)</td><td>เกิน uDat</td><td>0x00</td><td>sign (MSB=0)</td><td class="ans">s7 = 0x00000000</td></tr>
+              </table>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="alert-triangle" class="cyan"></i>ทำไม s5 ติดลบ?</h3>
+                <p class="card-text small"><code>lb</code> เจอ byte 0xab (MSB = 1) → sign-extend เติมเลข 1 หน้า 24 ตัว → <b class="danger">0xffffffab</b> ซึ่งเป็นค่าลบ (-85)</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="eye" class="cyan"></i>ถ้าใช้ lbu จะเป็นยังไง?</h3>
+                <p class="card-text small"><code>lbu</code> เติม 0 เสมอ → 0xab จะได้ <b class="cyan">0x000000ab</b> (บวก) — ต่างกันที่การขยายเครื่องหมายเท่านั้น</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 22 · เรื่องที่น่าจะออกสอบ ============ -->
+        <section class="slide-view" data-title="เรื่องที่น่าจะออกสอบ" aria-label="สไลด์ 22: เรื่องออกสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM FOCUS ⭐⭐⭐</p>
+            <h2 class="slide-title">เรื่องที่น่าจะออกสอบ</h2>
+            <p class="slide-subtitle">5 คำถามยอดฮิต — ตอบได้หมดก็พร้อมสอบ</p>
+
+            <div class="step-list mt-6">
+              <div class="step-box"><b>ข้อ 1 · MIPS Instruction มีขนาดเท่าไร?</b><br />ตอบ: <b class="cyan">32 bits</b> (4 bytes) — ทุกรูปแบบเท่ากันหมด</div>
+              <div class="step-box"><b>ข้อ 2 · R-Format มีช่องอะไรบ้าง?</b><br />ตอบ: <b class="cyan">opcode, rs, rt, rd, shamt, funct</b></div>
+              <div class="step-box"><b>ข้อ 3 · I-Format มีช่องอะไรบ้าง?</b><br />ตอบ: <b class="cyan">opcode, rs, rt, immediate</b></div>
+              <div class="step-box"><b>ข้อ 4 · J-Format มีช่องอะไรบ้าง?</b><br />ตอบ: <b class="cyan">opcode, target address</b></div>
+              <div class="step-box"><b>ข้อ 5 · Immediate คืออะไร?</b><br />ตอบ: <b class="cyan">ค่าตัวเลขที่อยู่ใน Instruction โดยตรง</b> เช่น เลข 10 ใน addi $t0,$t1,10</div>
+              <div class="step-box"><b>ข้อ 6 · 0xfffffffb + 0x00000007 = ? (unsigned 32 บิต)</b><br />ตอบ: <b class="cyan">2</b> — 0xfffffffb = 4,294,967,291 → +7 = 4,294,967,298 เกิน 2<sup>32</sup>-1 → ลบ 2<sup>32</sup> = <b class="cyan">2</b> (วนรอบเหมือนนาฬิกา)</div>
+              <div class="step-box"><b>ข้อ 7 · ค่าลบที่มากที่สุดของ signed 32 บิตคือ? (คำถามแบบหาค่า x)</b><br />ตอบ: <b class="cyan">0x80000000 = -2<sup>31</sup> = -2,147,483,648</b> — เช่น 0x7ffffffb + x = 0x80000000 → x = 5</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 23 · SUMMARY ============ -->
+        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 23: สรุปบทเรียน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">CHAPTER SUMMARY</p>
+            <h2 class="slide-title">สรุปบทเรียน</h2>
+            <p class="slide-subtitle">เก็บทุกประเด็นสำคัญของบทนี้ไว้ในหน้าเดียว</p>
+            <div class="grid-4 mt-6">
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="cpu" class="cyan"></i>32 bits</h3><p class="card-text small">ทุกคำสั่ง MIPS มีขนาดคงที่ 32 bits = 4 bytes</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="square-split-horizontal" class="cyan"></i>R-Format</h3><p class="card-text small">opcode|rs|rt|rd|shamt|funct · add, sub, slt · rd = rs + rt</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="hash" class="cyan"></i>I-Format</h3><p class="card-text small">opcode|rs|rt|immediate · addi, lw, sw, beq, bne</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="move-up-right" class="cyan"></i>J-Format</h3><p class="card-text small">opcode|target address · j, jal (jal เก็บ $ra)</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="database" class="cyan"></i>.word / .byte</h3><p class="card-text small">.word = 4 bytes · .byte = 1 byte · la เอา address ของ label</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="arrow-down-up" class="cyan"></i>Little-endian</h3><p class="card-text small">0xabcd1234 เก็บเป็น 34 12 cd ab — byte ต่ำมาก่อน</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="download" class="cyan"></i>lb vs lbu</h3><p class="card-text small">lb = sign-extend · lbu = zero-extend · lw = 4 bytes</p></div>
+              <div class="card hoverable"><h3 class="card-title" style="font-size:14.5px"><i data-lucide="flag" class="cyan"></i>q1t8.asm</h3><p class="card-text small">s0=0, s1=0x34, s2=0x12, s3=0xcd, s4=0, s5=0xffffffab, s6=0x12, s7=0</p></div>
+            </div>
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>R = Register · I = Immediate · J = Jump — และ lw = Memory→Register, sw = Register→Memory</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 24 · CHEAT SHEET ============ -->
+        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 24: สูตรจำก่อนสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM CHEAT SHEET</p>
+            <h2 class="slide-title">สูตรจำก่อนสอบ</h2>
+            <p class="slide-subtitle">รวมคำศัพท์และสูตรสำคัญแบบกระชับ — ทบทวนก่อนสอบในเวลาไม่กี่นาที</p>
+            <div class="cheat-grid mt-6">
+              <div class="cheat-item"><span class="term">MIPS Instruction</span><span class="arrow">→</span><span class="def">32 bits = 4 bytes</span></div>
+              <div class="cheat-item"><span class="term">R-Format</span><span class="arrow">→</span><span class="def">opcode|rs|rt|rd|shamt|funct</span></div>
+              <div class="cheat-item"><span class="term">I-Format</span><span class="arrow">→</span><span class="def">opcode|rs|rt|immediate</span></div>
+              <div class="cheat-item"><span class="term">J-Format</span><span class="arrow">→</span><span class="def">opcode|target address</span></div>
+              <div class="cheat-item"><span class="term">R = Register</span><span class="arrow">→</span><span class="def">add, sub, slt</span></div>
+              <div class="cheat-item"><span class="term">I = Immediate</span><span class="arrow">→</span><span class="def">addi, lw, sw, beq, bne</span></div>
+              <div class="cheat-item"><span class="term">J = Jump</span><span class="arrow">→</span><span class="def">j, jal</span></div>
+              <div class="cheat-item"><span class="term">add rd,rs,rt</span><span class="arrow">→</span><span class="def">rd = rs + rt</span></div>
+              <div class="cheat-item"><span class="term">addi $21,$22,-50</span><span class="arrow">→</span><span class="def">$21 = $22 + (-50)</span></div>
+              <div class="cheat-item"><span class="term">lw</span><span class="arrow">→</span><span class="def">Memory → Register</span></div>
+              <div class="cheat-item"><span class="term">sw</span><span class="arrow">→</span><span class="def">Register → Memory</span></div>
+              <div class="cheat-item"><span class="term">lb</span><span class="arrow">→</span><span class="def">โหลด 1 byte + sign-extend</span></div>
+              <div class="cheat-item"><span class="term">lbu</span><span class="arrow">→</span><span class="def">โหลด 1 byte + zero-extend</span></div>
+              <div class="cheat-item"><span class="term">jal</span><span class="arrow">→</span><span class="def">เก็บ $ra แล้ว Jump</span></div>
+              <div class="cheat-item"><span class="term">0xabcd1234 (LE)</span><span class="arrow">→</span><span class="def">เก็บเป็น 34 12 cd ab</span></div>
+              <div class="cheat-item"><span class="term">0x80000000</span><span class="arrow">→</span><span class="def">-2^31 ค่าลบที่มากที่สุด (signed 32 บิต)</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 25 · QUIZ ============ -->
+        <section class="slide-view quiz-slide" data-title="Quiz — แบบทดสอบบท 2 (10 ข้อ)" aria-label="สไลด์ 25: แบบทดสอบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">QUIZ MODE · 10 QUESTIONS</p>
+            <h2 class="slide-title">แบบทดสอบ บทที่ 2</h2>
+            <p class="slide-subtitle">ตอบคำถามแล้วดูคำอธิบายทันที — ครอบคลุม R/I/J Format และการโหลดข้อมูล</p>
+            <div id="quizC2"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 26 · FLASHCARDS ============ -->
+        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 26: การ์ดทบทวน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · FLASHCARDS</p>
+            <h2 class="slide-title">Flashcards — ทบทวนความรู้</h2>
+            <p class="slide-subtitle">อ่านคำถามแล้วลองตอบในใจก่อน — คลิกการ์ดเพื่อพลิกดูคำตอบ</p>
+
+            <div class="split mt-6" style="grid-template-columns:1fr">
+              <div class="flashcard-wrap">
+                <div class="flashcard" id="flashcard2" role="button" tabindex="0" aria-label="การ์ดคำถาม — คลิกเพื่อพลิก">
+                  <div class="flashcard-face flashcard-front">
+                    <span class="fc-eyebrow">QUESTION</span>
+                    <p class="fc-q" id="fcQ2">—</p>
+                    <span class="flashcard-hint">คลิกเพื่อพลิกการ์ด 🔄</span>
+                  </div>
+                  <div class="flashcard-face flashcard-back">
+                    <span class="fc-eyebrow">ANSWER</span>
+                    <p class="fc-a" id="fcA2">—</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-5 wrap" style="justify-content:center">
+              <button class="btn btn-ghost" id="fcPrev2"><i data-lucide="chevron-left"></i> Previous</button>
+              <span class="chip" id="fcCounter2">1 / 16</span>
+              <button class="btn btn-ghost" id="fcNext2">Next <i data-lucide="chevron-right"></i></button>
+              <button class="btn btn-cyan" id="fcShuffle2"><i data-lucide="shuffle"></i> Shuffle</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 27 · GLOSSARY ============ -->
+        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 27: คำศัพท์">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">REVIEW · GLOSSARY</p>
+            <h2 class="slide-title">Glossary — คำศัพท์ที่ควรรู้</h2>
+            <p class="slide-subtitle">ค้นหาคำศัพท์แบบเรียลไทม์ — คลิกคำศัพท์เพื่อดูความหมาย</p>
+
+            <div class="search-box mt-5">
+              <i data-lucide="search"></i>
+              <input type="search" id="glossarySearch2" placeholder="Search term... (ค้นหาคำศัพท์)" aria-label="ค้นหาคำศัพท์" autocomplete="off" />
+            </div>
+            <p class="text-3 mt-3" style="font-size:13px" id="glossaryCount2">28 คำศัพท์</p>
+            <div class="grid-2 mt-4" id="glossaryList2"></div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 28 · EXAM ============ -->
+        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — แบบทดสอบท้ายบท 10 ข้อ" aria-label="สไลด์ 28: ข้อสอบหลังเรียน 10 ข้อ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">POST-LESSON EXAM · 10 QUESTIONS</p>
+            <h2 class="slide-title" id="examHeadTitle">ข้อสอบหลังเรียน <span class="grad-text">10 ข้อ</span></h2>
+            <p class="slide-subtitle" id="examHeadSub">สอบเก็บคะแนนท้ายบท — trace โปรแกรม q1t8.asm + ระบบเลข 32 บิต signed/unsigned (เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้ ตอบแล้วดูเฉลยทันที)</p>
+            <div id="quizExam2"></div>
+          </div>
+        </section>
+      </div><!-- /viewport -->
+
+      <!-- ================= BOTTOM BAR ================= -->
+      <footer class="bottombar">
+        <button class="bb-nav-btn" id="prevBtn" aria-label="สไลด์ก่อนหน้า">
+          <i data-lucide="chevron-left"></i><span class="bb-label">ก่อนหน้า</span>
+        </button>
+
+        <div class="bb-center">
+          สไลด์ <b id="bbCounter">1</b> / <b id="bbTotal">28</b>
+        </div>
+
+        <div class="bb-tools">
+          <button class="icon-btn" id="fullscreenBtn" aria-label="ขยายสไลด์เต็มจอ" title="ขยายสไลด์">
+            <i data-lucide="maximize-2"></i>
+          </button>
+          <button class="icon-btn" id="printSlidesBtn" aria-label="พิมพ์สไลด์ทั้งหมด" title="พิมพ์สไลด์ทั้งหมด">
+            <i data-lucide="printer"></i>
+          </button>
+          <button class="icon-btn" id="printCardsBtn" aria-label="พิมพ์การ์ดสรุป" title="พิมพ์การ์ดสรุป">
+            <i data-lucide="file-output"></i>
+          </button>
+        </div>
+
+        <button class="bb-nav-btn next" id="nextBtn" aria-label="สไลด์ถัดไป">
+          <span class="bb-label">ถัดไป</span><i data-lucide="chevron-right"></i>
+        </button>
+      </footer>
+
+    </main>
+  </div><!-- /shell -->
+</div><!-- /app -->
+
+<!-- ================= DRAWER BACKDROP ================= -->
+<div id="drawerBackdrop" aria-hidden="true"></div>
+
+<!-- ================= NOTES PANEL ================= -->
+<aside class="notes-panel" id="notesPanel" aria-label="บันทึกย่อ">
+  <div class="flex items-center justify-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div>
+      <b style="font-size:15px">📝 บันทึกย่อ (Notes)</b>
+      <p class="text-3" style="font-size:12px" id="notesLabel">สไลด์ที่กำลังเรียน</p>
+    </div>
+    <button class="icon-btn" id="notesCloseBtn" aria-label="ปิดบันทึกย่อ"><i data-lucide="x"></i></button>
+  </div>
+  <textarea id="notesTextarea" placeholder="เขียนสิ่งที่ต้องจำจากสไลด์นี้...&#10;เช่น:&#10;- R = Register, I = Immediate, J = Jump&#10;- R-Format: opcode|rs|rt|rd|shamt|funct&#10;- lb = sign-extend · lbu = zero-extend&#10;- 0xabcd1234 เก็บเป็น 34 12 cd ab" aria-label="บันทึกย่อ"></textarea>
+  <div class="text-3" style="padding:10px 20px 14px;font-size:12px;border-top:1px solid var(--border)">
+    💾 บันทึกอัตโนมัติลงในเครื่องของคุณ (localStorage)
+  </div>
+</aside>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= COMPLETION OVERLAY ================= -->
+<div id="completionOverlay" role="dialog" aria-modal="true" aria-label="จบบทเรียน">
+  <div class="card center" style="max-width:440px;position:relative;padding:40px 32px;z-index:1">
+    <div style="font-size:56px" class="float-y">🎉</div>
+    <h2 class="slide-title mt-4" style="font-size:28px">Chapter Complete!</h2>
+    <p class="text-2 mt-2" id="completionMsg">คุณเรียนครบทุกสไลด์แล้ว — ยอดเยี่ยมมาก! <b class="grad-text">Keep Learning!</b></p>
+    <div class="grid-3 mt-5" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneSlides">28</b><p class="text-3" style="font-size:12px">สไลด์</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px" id="doneScore">–</b><p class="text-3" style="font-size:12px">คะแนน Quiz</p></div>
+      <div class="card" style="padding:14px"><b style="font-size:20px">100%</b><p class="text-3" style="font-size:12px">ความคืบหน้า</p></div>
+    </div>
+    <div class="flex items-center gap-3 mt-6 wrap" style="justify-content:center">
+      <button class="btn btn-ghost" id="completionCloseBtn">ปิด 🎊</button>
+      <button class="btn btn-primary" id="completionRestartBtn"><i data-lucide="rotate-ccw"></i> เรียนใหม่อีกครั้ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRINT AREA ================= -->
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- App scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
