@@ -40,7 +40,7 @@ window.DATA = {
     { label: "3. ภาษาเครื่องและคำสั่ง", topics: [7, 8] },
     { label: "4. รูปแบบคำสั่ง MIPS", topics: [9, 10] },
     { label: "5. ระบบเลข & Two's Complement", topics: [11, 12, 13, 14] },
-    { label: "ทบทวนและฝึกฝน", topics: [15, 16, 17, 18, 19, 20, 21] }
+    { label: "ทบทวนและฝึกฝน", topics: [15, 16, 17, 18, 19, 20, 21, 22, 23] }
   ],
 
   /* Slide 2 — roadmap cards */
