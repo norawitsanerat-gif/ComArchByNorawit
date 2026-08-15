@@ -577,182 +577,443 @@
           </div>
         </section>
 
-        <!-- ============ SLIDE 11 · NUMBER BASES ============ -->
-        <section class="slide-view" data-title="เลขฐาน 2 และ Hexadecimal" aria-label="สไลด์ 11: เลขฐาน 2 และ Hex">
+        <!-- ============ SLIDE 11 · BIT & N-BIT CAPACITY ============ -->
+        <section class="slide-view" data-title="Bit คืออะไร และ N-bit เก็บค่าได้กี่แบบ" aria-label="สไลด์ 11: Bit และ N-bit">
           <div class="slide-inner">
-            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
-            <h2 class="slide-title">เลขฐาน 2 และ <span class="grad-text">Hexadecimal</span></h2>
-            <p class="slide-subtitle">คอมพิวเตอร์เก็บข้อมูลเป็นเลขฐาน 2 (0/1) — แต่เขียนยาวมาก เราจึงใช้ <b class="cyan">Hex</b> (ฐาน 16) ให้สั้นลง: <b class="cyan">1 หลัก Hex = 4 บิต</b></p>
+            <p class="slide-eyebrow">NUMBER SYSTEMS · พื้นฐานก่อนเข้าสอบ</p>
+            <h2 class="slide-title">Bit คืออะไร และ N-bit <span class="grad-text">เก็บค่าได้กี่แบบ</span></h2>
+            <p class="slide-subtitle">ก่อนจะทำโจทย์ signed/unsigned/overflow ได้เลย ต้องตอบคำถามนี้ให้ไวที่สุดก่อน: <b class="cyan">N บิต เก็บค่าได้กี่แบบ?</b> — ทุกสูตรในบทนี้สร้างจากคำตอบข้อนี้ทั้งหมด</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ความเข้าใจก่อนคำนวณ</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>Bit</b> คือหน่วยที่เล็กที่สุดที่คอมพิวเตอร์เก็บได้ — มีได้แค่ 2 ค่า คือ <code>0</code> กับ <code>1</code></div>
+                <div class="step-box"><b>1 บิต</b> เลือกได้ 2 แบบ (0 หรือ 1) · <b>2 บิต</b> เลือกได้ 4 แบบ (00, 01, 10, 11) · <b>3 บิต</b> เลือกได้ 8 แบบ — สังเกตว่าทุกครั้งที่เพิ่ม 1 บิต จำนวนแบบจะ<b>คูณ 2</b></div>
+                <div class="step-box"><b>สรุปเป็นสูตร:</b> N บิต เก็บค่าได้ <code>2<sup>N</sup></code> แบบ เสมอ — เพราะแต่ละบิตเลือกได้ 2 ทาง และมี N บิตให้เลือกพร้อมกัน</div>
+              </div>
+            </div>
 
             <div class="split mt-6">
               <div class="visual-box">
-                <span class="vb-label">จับมือแปลง · 0xfa = เท่าไหร่? (ตอบฐาน 10)</span>
+                <span class="vb-label">ตาราง 2<sup>N</sup> ที่ต้องคุ้นตา (ท่องไว้ ไม่ต้องกดเครื่องคิดเลขทุกครั้ง)</span>
+                <table class="num-table mt-3">
+                  <tr><th>N (บิต)</th><th>2<sup>N</sup></th><th>N (บิต)</th><th>2<sup>N</sup></th></tr>
+                  <tr><td>1</td><td>2</td><td>8</td><td class="hi">256</td></tr>
+                  <tr><td>2</td><td>4</td><td>10</td><td>1,024</td></tr>
+                  <tr><td>3</td><td>8</td><td>16</td><td>65,536</td></tr>
+                  <tr><td>4</td><td>16</td><td>20</td><td>≈1.05 ล้าน</td></tr>
+                  <tr><td>5</td><td>32</td><td>32</td><td class="hi">4,294,967,296</td></tr>
+                  <tr><td>6</td><td class="hi">64</td><td>34</td><td>≈17.18 พันล้าน</td></tr>
+                  <tr><td>7</td><td>128</td><td>N</td><td>2<sup>N</sup></td></tr>
+                </table>
+                <p class="text-3 mt-2" style="font-size:13px">แถวที่ไฮไลต์ (6-bit = 64, 8-bit = 256, 32-bit ≈ 4.29 พันล้าน) คือค่าที่โจทย์ข้อสอบใช้บ่อยที่สุด</p>
+              </div>
+
+              <div class="flex" style="flex-direction:column;gap:16px">
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>🧮 วิธีใช้เครื่องคิดเลข</h3>
+                  <p class="card-text small" style="line-height:1.9">
+                    หา 2<sup>N</sup> โดยกด: <code>2</code> → <code>^</code> หรือ <code>xʸ</code> → <code>N</code> → <code>=</code><br />
+                    เช่น 2<sup>6</sup>: กด <code>2 → ^ → 6 → =</code> จะได้ <b class="cyan">64</b><br />
+                    ปุ่มอาจชื่อ <code>^</code>, <code>xʸ</code>, หรือ <code>yˣ</code> ขึ้นกับรุ่นเครื่อง — ถ้าใช้มือถือ เปิด <b>Scientific Calculator</b> (หมุนจอแนวนอน) จะมีปุ่มนี้
+                  </p>
+                </div>
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="hand" class="cyan"></i>วิธีทำมือ (ใช้ตอนไม่มีเครื่องคิดเลข)</h3>
+                  <p class="card-text small">2<sup>N</sup> คือ 2 คูณตัวเอง N ครั้ง: 2<sup>6</sup> = 2×2×2×2×2×2 = 64 — ทำได้ง่ายสุดถ้าคูณทีละ 2 ต่อกันไป (2,4,8,16,32,64)</p>
+                </div>
+                <div class="tip-box tip-remember">
+                  <i data-lucide="lightbulb"></i>
+                  <div><b>จำแบบนี้</b>N บิต = 2<sup>N</sup> แบบ เสมอ — ไม่ว่าจะตีความเป็น unsigned หรือ signed ก็ตาม จำนวน "แบบ" ทั้งหมดไม่เปลี่ยน เปลี่ยนแค่ "วิธีอ่านค่า" เท่านั้น (จะเรียนในสไลด์ถัดไป)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 12 · NUMBER BASE CONVERSION ============ -->
+        <section class="slide-view" data-title="เลขฐาน 2 / 10 / 16 — แปลงไปมาให้คล่อง" aria-label="สไลด์ 12: แปลงเลขฐาน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
+            <h2 class="slide-title">เลขฐาน 2 / 10 / 16 — <span class="grad-text">แปลงไปมาให้คล่อง</span></h2>
+            <p class="slide-subtitle">คอมพิวเตอร์เก็บข้อมูลเป็นเลขฐาน 2 (0/1) แต่เขียนยาวมาก จึงย่อด้วย <b class="cyan">Hex</b> (ฐาน 16) — กติกาที่ต้องจำขึ้นใจ: <b class="cyan">1 หลัก Hex = 4 บิต พอดี</b></p>
+
+            <div class="card mt-5">
+              <h3 class="card-title"><i data-lucide="hash" class="cyan"></i>ตัวอักษร Hex ที่ต้องแปลงให้ได้ทันที</h3>
+              <div class="hex-grid mt-2">
+                <span>A = 10</span><span>B = 11</span><span>C = 12</span><span>D = 13</span><span>E = 14</span><span>F = 15</span>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ทิศที่ 1 · Hex → Decimal · 0xFA = เท่าไหร่?</span>
                 <div class="step-list mt-3">
-                  <div class="step-box"><b>1.</b> แยกหลัก: 0xfa มี 2 หลัก คือ <code>f</code> กับ <code>a</code></div>
-                  <div class="step-box"><b>2.</b> แปลงตัวอักษร: <code>f = 15</code>, <code>a = 10</code> (จำ A=10, B=11, C=12, D=13, E=14, F=15)</div>
-                  <div class="step-box"><b>3.</b> หลักแรก (f) คูณ 16: <code>15 × 16 = 240</code></div>
-                  <div class="step-box"><b>4.</b> หลักที่สอง (a) บวกตามหลัง: <code>240 + 10</code></div>
-                  <div class="step-box"><b>5.</b> ได้คำตอบ: <code>0xfa = 250</code> <span class="ans-ok">✅</span></div>
+                  <div class="step-box"><b>1.</b> แยกหลัก: <code>0xFA</code> มี 2 หลัก คือ <code>F</code> กับ <code>A</code></div>
+                  <div class="step-box"><b>2.</b> แปลงตัวอักษรเป็นเลข: <code>F = 15</code>, <code>A = 10</code></div>
+                  <div class="step-box"><b>3.</b> หลักซ้าย (F) มีค่าตำแหน่งเป็น ×16: <code>15 × 16 = 240</code></div>
+                  <div class="step-box"><b>4.</b> หลักขวา (A) บวกตามหลังตรง ๆ: <code>240 + 10 = 250</code></div>
+                  <div class="step-box"><b>5.</b> คำตอบ: <code>0xFA = 250</code> <span class="ans-ok">✅</span></div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ทิศที่ 2 · Hex → Binary (เร็วสุด) · 0xFA</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> แปลงทีละหลัก หลักละ 4 บิต: <code>F = 1111</code>, <code>A = 1010</code></div>
+                  <div class="step-box"><b>2.</b> เอามาต่อกัน: <code>1111 1010</code></div>
+                  <div class="step-box"><b>3.</b> คำตอบ: <code>0xFA = 11111010</code><sub>2</sub> <span class="ans-ok">✅</span></div>
                 </div>
                 <div class="bits-visual mt-3">
                   <span class="b msb">1</span><span class="b">1</span><span class="b">1</span><span class="b">1</span><span class="b">1</span><span class="b">0</span><span class="b">1</span><span class="b">0</span>
                 </div>
-                <p class="text-3 mt-2" style="font-size:13px">f = 1111, a = 1010 → 1111 1010 (2) = 0xfa — <b>1 หลัก Hex = 4 บิต</b></p>
-              </div>
-
-              <div class="flex" style="flex-direction:column;gap:16px">
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="hash" class="cyan"></i>เลขฐานที่เจอบ่อย</h3>
-                  <p class="card-text small" style="line-height:2">
-                    <b class="cyan">Binary</b> — ฐาน 2 ใช้บิต 0/1<br />
-                    <b class="cyan">Hex</b> — ฐาน 16 ใช้ 0-9, A-F หนึ่งหลักแทน 4 บิต<br />
-                    <b class="cyan">Decimal</b> — ฐาน 10 ที่มนุษย์ใช้ปกติ
-                  </p>
-                </div>
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="cpu" class="cyan"></i>ทำไมต้องรู้ Hex</h3>
-                  <p class="card-text">คำสั่ง MIPS 32 bits ยาวเกินไป ถ้าเขียนเป็น 8 หลัก Hex จะกระชับกว่า — เช่น 0x012A4020</p>
-                </div>
-                <div class="tip-box tip-remember">
-                  <i data-lucide="lightbulb"></i>
-                  <div><b>จำแบบนี้</b>32 bits = 8 หลัก Hex · 4 bits = 1 หลัก Hex · 0x ข้างหน้า = เลขฐาน 16 · A-F = 10-15</div>
-                </div>
+                <p class="text-3 mt-2" style="font-size:13px">วิธีนี้เร็วกว่าการแปลงผ่าน Decimal มาก — ใช้ได้ทุกครั้งที่โจทย์ให้ Hex มา</p>
               </div>
             </div>
-          </div>
-        </section>
-
-        <!-- ============ SLIDE 12 · SIGNED VS UNSIGNED ============ -->
-        <section class="slide-view" data-title="Signed vs Unsigned — ช่วงค่า N บิต" aria-label="สไลด์ 12: Signed vs Unsigned">
-          <div class="slide-inner">
-            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
-            <h2 class="slide-title">Signed vs Unsigned — <span class="grad-text">ช่วงค่าของ N บิต</span></h2>
-            <p class="slide-subtitle">บิตจำนวนเดียวกัน ตีความได้ 2 แบบ — <b class="cyan">Unsigned</b> ไม่มีค่าลบ · <b class="cyan">Signed</b> มีค่าลบ (ใช้บิตซ้ายสุดเป็นเครื่องหมาย)</p>
 
             <div class="split mt-6">
               <div class="visual-box">
-                <span class="vb-label">จับมือหา ช่วงค่า (Range) · N = 6 บิต</span>
+                <span class="vb-label">ทิศที่ 3 · Binary → Decimal (บวกตามค่าตำแหน่ง) · 11111010</span>
                 <div class="step-list mt-3">
-                  <div class="step-box"><b>1.</b> คำนวณ <code>2^6 = 64</code> ไว้ก่อน</div>
-                  <div class="step-box"><b>2.</b> <b>Unsigned มากสุด</b> = 2^N - 1 = 64 - 1 = <b class="ans-ok">63</b> · น้อยสุด = 0</div>
-                  <div class="step-box"><b>3.</b> <b>Signed</b> แบ่งครึ่ง: บวก = 0 .. 2^(N-1)-1 = 32-1 = <b class="ans-ok">31</b></div>
-                  <div class="step-box"><b>4.</b> ลบ = -2^(N-1) = -32 → ช่วง signed = <b class="ans-ok">-32 .. 31</b></div>
-                </div>
-                <table class="num-table mt-3">
-                  <tr><th>ระบบ</th><th>N = 6 บิต</th><th>N = 8 บิต</th></tr>
-                  <tr><td><b>Unsigned</b></td><td><span class="lo">0</span> .. <span class="hi">63</span></td><td><span class="lo">0</span> .. <span class="hi">255</span></td></tr>
-                  <tr><td><b>Signed</b></td><td><span class="lo">-32</span> .. <span class="hi">31</span></td><td><span class="lo">-128</span> .. <span class="hi">127</span></td></tr>
-                </table>
-              </div>
-
-              <div class="flex" style="flex-direction:column;gap:16px">
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="sigma" class="cyan"></i>สูตรจำ (เอาไปใช้ได้ทุกข้อ)</h3>
-                  <p class="card-text small" style="line-height:2">
-                    <b class="cyan">Unsigned</b> : 0 .. 2<sup>N</sup>-1<br />
-                    <b class="cyan">Signed</b> : -2<sup>N-1</sup> .. 2<sup>N-1</sup>-1
-                  </p>
-                </div>
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="help-circle" class="cyan"></i>ตัวอย่าง (6 บิต)</h3>
-                  <p class="card-text">signed มากสุด = 31, น้อยสุด = -32 — unsigned มากสุด = 63, น้อยสุด = 0</p>
-                </div>
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="ruler" class="cyan"></i>เลขฐาน 10 กี่หลัก → ต้องใช้กี่บิต?</h3>
-                  <p class="card-text small" style="line-height:1.9">
-                    หา N ที่ <code>2<sup>N-1</sup> &lt; ค่า &le; 2<sup>N</sup></code><br />
-                    เช่น ตัวเลข 10 หลัก (สูงสุด 9,999,999,999):<br />
-                    2<sup>33</sup> ≈ 8.6 พันล้าน &lt; 1 หมื่นล้าน &le; 2<sup>34</sup> ≈ 1.7 หมื่นล้าน<br />
-                    → ต้องใช้ <b class="cyan">N = 34 บิต</b>
-                  </p>
-                </div>
-                <div class="tip-box tip-exam">
-                  <i data-lucide="graduation-cap"></i>
-                  <div><b>Exam Tip</b>ข้อสอบถาม "มากที่สุด/น้อยที่สุดของ N บิต" — แทนค่า N ในสูตรเลย: 2<sup>N</sup>-1, -2<sup>N-1</sup>, 2<sup>N-1</sup>-1, 0</div>
+                  <div class="step-box"><b>1.</b> เขียนค่าตำแหน่งของแต่ละบิตจากขวาไปซ้าย: <code>128, 64, 32, 16, 8, 4, 2, 1</code> (คือ 2<sup>7</sup> ถึง 2<sup>0</sup>)</div>
+                  <div class="step-box"><b>2.</b> บวกเฉพาะตำแหน่งที่เป็นบิต 1: <code>128+64+32+16+8+0+2+0</code></div>
+                  <div class="step-box"><b>3.</b> รวมผล: <code>128+64+32+16+8+2 = 250</code> <span class="ans-ok">✅</span></div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ SLIDE 13 · TWO'S COMPLEMENT ============ -->
-        <section class="slide-view" data-title="Two's Complement — จำนวนลบ" aria-label="สไลด์ 13: Two's Complement">
-          <div class="slide-inner">
-            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
-            <h2 class="slide-title">Two's Complement — <span class="grad-text">จำนวนลบในคอมพิวเตอร์</span></h2>
-            <p class="slide-subtitle">วิธีสร้างจำนวนลบ: กลับบิตทุกตัว (invert) แล้วบวก 1 — เช่น หา -6 ในระบบ 8 บิต</p>
-
-            <div class="split mt-6">
               <div class="visual-box">
-                <span class="vb-label">ขั้นตอน · หา -6 ในแบบ 8 บิต</span>
+                <span class="vb-label">ทิศที่ 4 · Decimal → Hex · 196 = เท่าไหร่ในฐาน 16?</span>
                 <div class="step-list mt-3">
-                  <div class="step-box"><b>1.</b> เขียน 6: <code>00000110</code></div>
-                  <div class="step-box"><b>2.</b> กลับบิตทุกตัว: <code>11111001</code></div>
-                  <div class="step-box"><b>3.</b> บวก 1: <code>11111010</code> = <code>0xFA</code> = <b class="ans-ok">-6</b></div>
+                  <div class="step-box"><b>1.</b> เอา 196 ÷ 16 = 12 เศษ 4 → หลักขวา = <code>4</code>, ผลหาร 12 = <code>C</code></div>
+                  <div class="step-box"><b>2.</b> เอาผลหาร (12) ÷ 16 = 0 เศษ 12 → หลักซ้าย = <code>C</code></div>
+                  <div class="step-box"><b>3.</b> อ่านผลหารจากล่างขึ้นบน: <code>196 = 0xC4</code> <span class="ans-ok">✅</span></div>
                 </div>
-                <p class="text-3 mt-3" style="font-size:13px;text-align:center">บิตเดียวกัน 0xFA — unsigned อ่านได้ 250, signed อ่านได้ -6</p>
+                <p class="text-3 mt-2" style="font-size:13px">ตรวจคำตอบย้อนกลับ: 0xC4 → C=12×16=192, +4 = 196 ✅ ตรงกัน</p>
               </div>
-
-              <div class="flex" style="flex-direction:column;gap:16px">
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="arrow-right-left" class="cyan"></i>อ่านค่า signed แบบลัด</h3>
-                  <p class="card-text">ถ้า MSB (บิตซ้ายสุด) = 1 → signed = ค่า unsigned - 2<sup>N</sup> เช่น 0xFA = 250 - 256 = <b class="ans-ok">-6</b></p>
-                </div>
-                <div class="card">
-                  <h3 class="card-title"><i data-lucide="eye" class="cyan"></i>บิตเดียวกัน ความหมายต่างกัน</h3>
-                  <p class="card-text small">0xFA = <b class="cyan">250</b> (unsigned 8 บิต) แต่ = <b class="cyan">-6</b> (signed 8 บิต) — ขึ้นอยู่กับว่าเราตีความแบบไหน</p>
-                </div>
-                <div class="tip-box tip-exam">
-                  <i data-lucide="graduation-cap"></i>
-                  <div><b>Exam Tip</b>เจอเลข Hex ตัวแรก ≥ 8 (เช่น 0xfa) ในระบบ signed → ลองลบ 256 ก่อน: 250-256 = -6</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ SLIDE 14 · OVERFLOW ============ -->
-        <section class="slide-view" data-title="การบวก-ลบ และการล้น (Overflow)" aria-label="สไลด์ 14: การบวก-ลบ และ Overflow">
-          <div class="slide-inner">
-            <p class="slide-eyebrow">NUMBER SYSTEMS · ARITHMETIC</p>
-            <h2 class="slide-title">การบวก-ลบ และการล้น <span class="grad-text">(Overflow)</span></h2>
-            <p class="slide-subtitle">ข้อสอบแนวนี้ทำแค่ 3 ขั้นตอน — จำให้แม่น แล้วทุกข้อจะกลายเป็นเรื่องง่าย</p>
-
-            <div class="visual-box mt-6">
-              <span class="vb-label">วิธีคิด 3 ขั้นตอน · ใช้ได้กับทุกข้อ</span>
-              <div class="step-list mt-3">
-                <div class="step-box"><b>1. คำนวณผลก่อน</b> — ทำเลขปกติ: เช่น -125-10 = -135, 200+70 = 270</div>
-                <div class="step-box"><b>2. เช็ค operand (ตัวเลขในโจทย์)</b> — ถ้าตัวใดเกินช่วงของระบบ → ตอบ <b class="ans-err">err</b> ทันที (เช่น signed 8 บิต ใช้ -130, หรือ unsigned ใช้ค่าลบ)</div>
-                <div class="step-box"><b>3. เช็คผลลัพธ์</b> — ถ้า operand ใช้ได้หมด แต่ผลเกินช่วง → วนรอบ: บวก/ลบด้วย 2<sup>N</sup> (8 บิต = ±256)</div>
-              </div>
-            </div>
-
-            <div class="visual-box mt-6">
-              <span class="vb-label">จับมือทำตัวอย่างจากข้อสอบ · ระบบ 8 บิต</span>
-              <table class="num-table mt-3">
-                <tr><th>โจทย์</th><th>ระบบ</th><th>วิธีคิด (3 ขั้น)</th><th>ผล</th></tr>
-                <tr><td>-125-10</td><td>signed</td><td>คำนวณ = -135 → operand ใช้ได้ → เกินช่วง: -135+256</td><td class="ans-ok">121</td></tr>
-                <tr><td>-125-126</td><td>signed</td><td>คำนวณ = -251 → operand ใช้ได้ → -251+256</td><td class="ans-ok">5</td></tr>
-                <tr><td>-125-130</td><td>signed</td><td>ขั้น 2: -130 เกินช่วง signed (-128..127)</td><td class="ans-err">err</td></tr>
-                <tr><td>-125-10</td><td>unsigned</td><td>ขั้น 2: -125 เป็นค่าลบ — unsigned ใช้ค่าลบไม่ได้</td><td class="ans-err">err</td></tr>
-                <tr><td>200+70</td><td>unsigned</td><td>คำนวณ = 270 → operand ใช้ได้ → 270-256</td><td class="ans-ok">14</td></tr>
-                <tr><td>70-200</td><td>unsigned</td><td>คำนวณ = -130 → ผลลบเกินช่วง → 256-130</td><td class="ans-ok">126</td></tr>
-                <tr><td>0xc8+0xc4</td><td>unsigned</td><td>200+196 = 396 → เกิน 255 → 396-256</td><td class="ans-ok">140</td></tr>
-                <tr><td>0xc8+0xc4</td><td>signed</td><td>0xc8=-56, 0xc4=-60 → -116 อยู่ในช่วง</td><td class="ans-ok">-116</td></tr>
-                <tr><td>0xfffffffb+0x00000007</td><td>unsigned 32-bit</td><td>4294967291+7 = 4294967298 → เกิน 2<sup>32</sup>-1 → ลบ 2<sup>32</sup></td><td class="ans-ok">2</td></tr>
-                <tr><td>-140 → เลขฐาน 16</td><td>signed 8 บิต</td><td>ขั้น 2: -140 ต่ำกว่า -128 → แทนไม่ได้</td><td class="ans-err">err</td></tr>
-                <tr><td>-140 → เลขฐาน 16</td><td>unsigned 8 บิต</td><td>ขั้น 2: ค่าลบใน unsigned → แทนไม่ได้</td><td class="ans-err">err</td></tr>
-              </table>
             </div>
 
             <div class="grid-2 mt-6">
               <div class="card">
-                <h3 class="card-title"><i data-lucide="alert-triangle" class="cyan"></i>เมื่อไหร่เป็น err</h3>
-                <p class="card-text small">เมื่อตัวเลขที่โจทย์ให้ (operand) <b class="danger">เกินช่วงของระบบนั้น</b> — เช็คก่อนเสมอ เช่น signed 8 บิตใช้ -130 หรือ unsigned ใช้ค่าลบ หรือเลขอย่าง -140 แทนใน 8 บิตไม่ได้ (ทั้ง signed/unsigned)</p>
+                <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>🧮 วิธีใช้เครื่องคิดเลข (BASE-N)</h3>
+                <p class="card-text small">เครื่องคิดเลขวิทยาศาสตร์บางรุ่นมีโหมด <code>BASE-N</code> หรือ <code>DEC/HEX/BIN</code> — พิมพ์เลขแล้วกดสลับโหมดจะแปลงให้อัตโนมัติ แต่ <b class="warning">ในห้องสอบอาจใช้ไม่ได้</b> จึงต้อง<b>ทำมือเป็นเสมอ</b> ตามขั้นตอนด้านบน</p>
+              </div>
+              <div class="tip-box tip-remember">
+                <i data-lucide="lightbulb"></i>
+                <div><b>จำแบบนี้</b>32 bits = 8 หลัก Hex · 4 bits = 1 หลัก Hex เสมอ · 0x ข้างหน้า = บอกว่าเป็นเลขฐาน 16 · A-F = 10-15</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · UNSIGNED RANGE ============ -->
+        <section class="slide-view" data-title="Unsigned Range และการหาจำนวนบิตที่ต้องใช้" aria-label="สไลด์ 13: Unsigned Range">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
+            <h2 class="slide-title">Unsigned Range — <span class="grad-text">ช่วงค่าแบบไม่มีเครื่องหมาย</span></h2>
+            <p class="slide-subtitle"><b class="cyan">Unsigned</b> แปลว่า "ไม่มีเครื่องหมาย" — ทุกบิตถูกใช้แทนขนาดของตัวเลขล้วน ๆ ไม่มีบิตไหนถูกกันไว้ทำเครื่องหมายลบ ดังนั้นค่าที่เก็บได้จึงเริ่มจาก 0 เสมอ</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">อธิบายก่อนคำนวณ: ทำไมสูตรถึงเป็น 0 .. 2<sup>N</sup>-1</span>
+              <div class="step-list mt-3">
+                <div class="step-box">N บิต เก็บได้ <code>2<sup>N</sup></code> แบบ (จากสไลด์ก่อนหน้า) — ระบบ unsigned เอาทุกแบบไปแทนเลข <b>0, 1, 2, 3, ...</b> เรียงขึ้นไปเรื่อย ๆ</div>
+                <div class="step-box">เริ่มนับจาก 0 (ไม่ใช่ 1) ดังนั้นค่ามากสุดจึงเป็นแบบที่ <code>2<sup>N</sup></code> ซึ่งอยู่ที่ตัวเลข <code>2<sup>N</sup> - 1</code> (ลบ 1 เพราะเริ่มนับที่ 0)</div>
+                <div class="step-box">สรุปสูตร: <b class="cyan">น้อยสุด = 0</b> · <b class="cyan">มากสุด = 2<sup>N</sup> - 1</b></div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">🎯 ตัวอย่างแบบข้อสอบ · N = 6-bit unsigned มากสุด/น้อยสุด?</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> อ่านโจทย์: unsigned, N = 6</div>
+                  <div class="step-box"><b>2.</b> หา 2<sup>N</sup> ก่อน: <code>2<sup>6</sup> = 64</code></div>
+                  <div class="step-box"><b>3.</b> มากสุด = <code>64 - 1 = 63</code> · น้อยสุด = <code>0</code></div>
+                  <div class="step-box"><b>4.</b> คำตอบ: <b class="ans-ok">มากสุด = 63, น้อยสุด = 0</b></div>
+                </div>
+                <p class="text-3 mt-2" style="font-size:13px">🧮 เครื่องคิดเลข: <code>2 → ^ → 6 → =</code> ได้ 64 แล้วลบ 1 ด้วยมือ</p>
+              </div>
+
+              <div class="flex" style="flex-direction:column;gap:16px">
+                <table class="num-table">
+                  <tr><th>N บิต</th><th>2<sup>N</sup></th><th>Unsigned Range</th></tr>
+                  <tr><td>4</td><td>16</td><td><span class="lo">0</span> .. <span class="hi">15</span></td></tr>
+                  <tr><td>6</td><td>64</td><td><span class="lo">0</span> .. <span class="hi">63</span></td></tr>
+                  <tr><td>8</td><td>256</td><td><span class="lo">0</span> .. <span class="hi">255</span></td></tr>
+                  <tr><td>32</td><td>4,294,967,296</td><td><span class="lo">0</span> .. <span class="hi">4,294,967,295</span></td></tr>
+                </table>
+                <div class="tip-box tip-exam">
+                  <i data-lucide="graduation-cap"></i>
+                  <div><b>Exam Tip</b>โจทย์ถาม "unsigned น้อยที่สุด" ตอบ 0 เสมอ ไม่ว่า N จะเป็นเท่าไหร่ — ข้อสอบชอบเอามาหลอกเป็นตัวเลือกลบ (-1) ซึ่งผิดเสมอสำหรับ unsigned</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">โจทย์อีกแบบที่ใช้สูตรเดียวกัน: เลขฐาน 10 จำนวนหลายหลัก ต้องใช้ Binary กี่บิต?</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ความเข้าใจ:</b> เราต้องหา N บิต (unsigned) ที่เก็บค่าได้ครอบคลุมตัวเลขสูงสุดที่โจทย์ต้องการ นั่นคือหา N ที่เล็กที่สุดซึ่งทำให้ <code>2<sup>N</sup> - 1 ≥ ค่าสูงสุด</code></div>
+                <div class="step-box"><b>ตัวอย่างข้อสอบ:</b> เลขฐาน 10 จำนวน 10 หลัก มีค่าได้สูงสุด <code>9,999,999,999</code> (เลข 9 สิบตัว)</div>
+                <div class="step-box"><b>1.</b> ลองไล่ค่า 2<sup>N</sup> ที่ใกล้เคียง: <code>2<sup>33</sup> ≈ 8,589,934,592</code> (8.6 พันล้าน — ยังน้อยกว่า 9,999,999,999)</div>
+                <div class="step-box"><b>2.</b> ลองบิตถัดไป: <code>2<sup>34</sup> ≈ 17,179,869,184</code> (1.7 หมื่นล้าน — มากพอที่จะครอบคลุมแล้ว)</div>
+                <div class="step-box"><b>3.</b> คำตอบ: ต้องใช้ <b class="ans-ok">N = 34 บิต</b> (33 บิตยังไม่พอ เพราะเก็บได้แค่ถึง 8,589,934,591)</div>
+              </div>
+              <div class="grid-2 mt-4">
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>🧮 วิธีใช้เครื่องคิดเลข (log)</h3>
+                  <p class="card-text small">ถ้าเครื่องมี <code>log</code> หรือ <code>ln</code>: หา N จาก <code>log(9999999999) ÷ log(2)</code> หรือ <code>ln(9999999999) ÷ ln(2)</code> จะได้ประมาณ 33.2 แล้ว<b>ปัดขึ้น</b>เป็น 34 เสมอ (ปัดขึ้นเพราะต้องมีที่เก็บพอ)</p>
+                </div>
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="ruler" class="cyan"></i>วิธีทำมือ (ไล่ powers of 2)</h3>
+                  <p class="card-text small">ถ้าไม่มี log ให้ไล่ 2<sup>N</sup> ทีละบิตจากตารางที่จำไว้ (สไลด์ก่อนหน้า) จนกว่าจะ "เพิ่งเกิน" ค่าที่ต้องการ — วิธีนี้ช้ากว่าแต่ไม่มีวันผิด</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 14 · SIGNED RANGE, MSB, SIGN BIT ============ -->
+        <section class="slide-view" data-title="Signed Range, MSB และ Sign Bit" aria-label="สไลด์ 14: Signed Range">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
+            <h2 class="slide-title">Signed Range, MSB <span class="grad-text">และ Sign Bit</span></h2>
+            <p class="slide-subtitle"><b class="cyan">Signed</b> แปลว่า "มีเครื่องหมาย" — เก็บค่าลบได้ด้วย โดยยอม "เสีย" บิตซ้ายสุด 1 บิต ไปทำหน้าที่บอกเครื่องหมาย แทนที่จะใช้เก็บขนาดของตัวเลข</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">อธิบายก่อนคำนวณ: ทำไมต้องเสีย 1 บิต และทำไมสูตรไม่สมมาตร</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>MSB (Most Significant Bit)</b> คือบิตซ้ายสุดของเลขฐาน 2 — ในระบบ signed บิตนี้ถูกเรียกว่า <b>Sign Bit</b>: ถ้า MSB = 0 → เป็นบวก, ถ้า MSB = 1 → เป็นลบ</div>
+                <div class="step-box">เมื่อ 1 บิต (MSB) ถูกกันไว้ทำเครื่องหมายแล้ว จะเหลือ <code>N-1</code> บิต ไปเก็บขนาดของตัวเลข ซึ่งเก็บได้ <code>2<sup>N-1</sup></code> แบบ</div>
+                <div class="step-box"><b>ฝั่งบวก</b> (รวม 0) ใช้ไป <code>2<sup>N-1</sup></code> แบบ แต่เริ่มนับที่ 0 → มากสุด = <code>2<sup>N-1</sup> - 1</code></div>
+                <div class="step-box"><b>ฝั่งลบ</b> ไม่ต้องเก็บ 0 ซ้ำ จึงได้ครบ <code>2<sup>N-1</sup></code> แบบเต็ม ๆ → น้อยสุด = <code>-2<sup>N-1</sup></code> (ฝั่งลบมากกว่าฝั่งบวกอยู่ 1 ค่าเสมอ — นี่คือเหตุผลที่ Range ไม่สมมาตร)</div>
+              </div>
+              <table class="num-table mt-3">
+                <tr><th>สูตร</th><th>ความหมาย</th></tr>
+                <tr><td><code>Maximum = 2<sup>N-1</sup> - 1</code></td><td>ค่าบวกมากสุด</td></tr>
+                <tr><td><code>Minimum = -2<sup>N-1</sup></code></td><td>ค่าลบน้อยสุด (ติดลบมากสุด)</td></tr>
+              </table>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">🎯 ตัวอย่างแบบข้อสอบ · What is the maximum value of a 6-bit signed number?</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> อ่านโจทย์: maximum = ค่าสูงสุด, signed = มีเครื่องหมาย, N = 6</div>
+                  <div class="step-box"><b>2.</b> ใช้สูตร: <code>2<sup>N-1</sup> - 1</code></div>
+                  <div class="step-box"><b>3.</b> แทนค่า: <code>2<sup>(6-1)</sup> - 1 = 2<sup>5</sup> - 1</code></div>
+                  <div class="step-box"><b>4.</b> คำนวณ: <code>32 - 1 = 31</code></div>
+                  <div class="step-box"><b>5.</b> คำตอบ: <b class="ans-ok">31</b></div>
+                </div>
+                <p class="text-3 mt-2" style="font-size:13px">🧮 เครื่องคิดเลข: <code>2 → ^ → 5 → =</code> ได้ 32 แล้วลบ 1 ด้วยมือ</p>
+              </div>
+
+              <div class="flex" style="flex-direction:column;gap:16px">
+                <table class="num-table">
+                  <tr><th>ระบบ</th><th>N = 6 บิต</th><th>N = 8 บิต</th></tr>
+                  <tr><td><b>Unsigned</b></td><td><span class="lo">0</span> .. <span class="hi">63</span></td><td><span class="lo">0</span> .. <span class="hi">255</span></td></tr>
+                  <tr><td><b>Signed</b></td><td><span class="lo">-32</span> .. <span class="hi">31</span></td><td><span class="lo">-128</span> .. <span class="hi">127</span></td></tr>
+                </table>
+                <div class="tip-box tip-exam">
+                  <i data-lucide="graduation-cap"></i>
+                  <div><b>Exam Tip</b>โจทย์ถาม "มากที่สุด/น้อยที่สุดของ N บิต" แทนค่า N ลงสูตรตรง ๆ ได้เลย: 2<sup>N</sup>-1 (unsigned max) · 0 (unsigned min) · 2<sup>N-1</sup>-1 (signed max) · -2<sup>N-1</sup> (signed min)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">⚠️ บิตแบบเดียวกัน ความหมายต่างกันได้ — MSB=1 ไม่ได้แปลว่าติดลบเสมอ</span>
+              <table class="num-table mt-3">
+                <tr><th>Bit Pattern (8 บิต)</th><th>อ่านแบบ Unsigned</th><th>อ่านแบบ Signed</th></tr>
+                <tr><td><code>11111111</code></td><td class="hi">255</td><td class="lo">-1</td></tr>
+                <tr><td><code>10000000</code></td><td class="hi">128</td><td class="lo">-128</td></tr>
+                <tr><td><code>01111111</code></td><td class="hi">127</td><td class="hi">127</td></tr>
+              </table>
+              <p class="text-3 mt-3" style="font-size:13px">บิตชุดเดียวกันเก็บอยู่ในหน่วยความจำแบบเดียวกันเป๊ะ ๆ แต่ให้ค่าต่างกันขึ้นอยู่กับว่า "เราเลือกตีความ" เป็น signed หรือ unsigned — คอมพิวเตอร์เองไม่รู้ว่าเราจะตีความแบบไหน โปรแกรมต่างหากที่เป็นตัวกำหนด</p>
+              <div class="tip-box tip-note mt-3">
+                <i data-lucide="alert-triangle"></i>
+                <div><b>ข้อสอบชอบหลอก</b>MSB = 1 <u>ไม่ได้</u>แปลว่าติดลบเสมอ — มันติดลบก็ต่อเมื่อโจทย์บอกให้ตีความเป็น <b>signed</b> เท่านั้น ถ้าโจทย์บอกว่า unsigned ต่อให้ MSB = 1 ค่าก็ยังเป็นบวกอยู่ดี</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 15 · TWO'S COMPLEMENT ============ -->
+        <section class="slide-view" data-title="Two's Complement — แปลงเป็นค่าลบ (ไปและกลับ)" aria-label="สไลด์ 15: Two's Complement">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS</p>
+            <h2 class="slide-title">Two's Complement — <span class="grad-text">แปลงเป็นค่าลบ (ไปและกลับ)</span></h2>
+            <p class="slide-subtitle"><b class="cyan">Two's Complement</b> คือวิธีมาตรฐานที่คอมพิวเตอร์ใช้เก็บเลขลบ — วิธีสร้าง: กลับบิตทุกตัว (invert) แล้วบวก 1 เข้าไป</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ขั้นตอน (ไปทาง) · หา -6 ในระบบ 8 บิต</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> เขียน 6 (ค่าบวก) เป็น binary 8 บิตก่อน: <code>00000110</code></div>
+                  <div class="step-box"><b>2.</b> Invert — กลับบิตทุกตัว (0↔1): <code>11111001</code></div>
+                  <div class="step-box"><b>3.</b> บวก 1 เข้าไป: <code>11111001 + 1 = 11111010</code></div>
+                  <div class="step-box"><b>4.</b> คำตอบ: <code>11111010</code> = <code>0xFA</code> = <b class="ans-ok">-6</b></div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ขั้นตอน (กลับทาง) · 11111011 คือค่าลบอะไร?</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>1.</b> ดู MSB: เป็น 1 → เป็นค่าลบแน่นอน ต้องหา "ขนาด" (magnitude) ของมัน</div>
+                  <div class="step-box"><b>2.</b> Invert ทุกบิต: <code>11111011 → 00000100</code></div>
+                  <div class="step-box"><b>3.</b> บวก 1: <code>00000100 + 1 = 00000101</code> = 5 (ฐาน 10)</div>
+                  <div class="step-box"><b>4.</b> คำตอบ: <code>11111011 = -5</code> <span class="ans-ok">✅</span> (ทำ invert+1 ซ้ำสองรอบ จะย้อนกลับมาที่ค่าเดิมเสมอ)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">🚀 ทางลัด: อ่าน Hex เป็น Signed โดยไม่ต้อง invert+1</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>สูตรลัด:</b> ถ้า MSB = 1 (เลข Hex หลักแรก ≥ 8) → <code>ค่า signed = ค่า unsigned - 2<sup>N</sup></code></div>
+                <div class="step-box"><b>ตัวอย่าง 1:</b> <code>0xFA</code> (8-bit) → unsigned = 250 → MSB=1 → signed = <code>250 - 256 = -6</code> <span class="ans-ok">✅</span> ตรงกับวิธี invert+1 ด้านบน</div>
+                <div class="step-box"><b>ตัวอย่าง 2:</b> <code>0xC8</code> (8-bit) → unsigned = 200 → MSB=1 (C ≥ 8) → signed = <code>200 - 256 = -56</code></div>
+                <div class="step-box"><b>ตัวอย่าง 3:</b> <code>0xC4</code> (8-bit) → unsigned = 196 → MSB=1 (C ≥ 8) → signed = <code>196 - 256 = -60</code></div>
+              </div>
+              <p class="text-3 mt-3" style="font-size:13px">วิธีลัดนี้เร็วกว่ามากในห้องสอบ — ใช้ได้เฉพาะตอนแปลง "unsigned → signed" ของบิตแพทเทิร์นเดียวกันเท่านั้น</p>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="eye" class="cyan"></i>บิตเดียวกัน ความหมายต่างกัน</h3>
+                <p class="card-text small">0xFA = <b class="cyan">250</b> (unsigned 8 บิต) แต่ = <b class="cyan">-6</b> (signed 8 บิต) — เก็บในหน่วยความจำเหมือนกันทุกประการ ต่างแค่วิธีตีความ</p>
               </div>
               <div class="card">
-                <h3 class="card-title"><i data-lucide="refresh-ccw" class="cyan"></i>เมื่อไหร่ต้องวนรอบ</h3>
-                <p class="card-text small">เมื่อ operand ทุกตัวอยู่ในช่วง แต่ <b>ผลลัพธ์เกินช่วง</b> → บวก/ลบด้วย 2<sup>N</sup> เช่น 270-256=14, 256-130=126</p>
+                <h3 class="card-title"><i data-lucide="ban" class="cyan"></i>เมื่อค่าลบใหญ่เกินจะแทนใน Hex ไม่ได้</h3>
+                <p class="card-text small">ถ้าโจทย์ให้แปลงค่าลบที่ <b class="danger">ต่ำกว่า -2<sup>N-1</sup></b> เป็น Hex เช่น -140 ในระบบ 8-bit signed (ช่วง -128..127) → -140 ต่ำกว่า -128 → <b class="ans-err">แทนค่าไม่ได้ ตอบ ERR</b></p>
+              </div>
+            </div>
+            <div class="tip-box tip-exam mt-4">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>Exam Tip</b>เจอเลข Hex ที่หลักแรก ≥ 8 (8,9,A,B,C,D,E,F) ในระบบ signed → MSB=1 แน่นอน → ลองลบ 2<sup>N</sup> ก่อนเสมอ (8-bit ลบ 256, 32-bit ลบ 4,294,967,296)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 16 · ARITHMETIC, OVERFLOW, WRAP-AROUND, ERR ============ -->
+        <section class="slide-view" data-title="บวก-ลบเลข Signed/Unsigned, Overflow และ ERR" aria-label="สไลด์ 16: การบวก-ลบ และ Overflow">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS · ARITHMETIC</p>
+            <h2 class="slide-title">บวก-ลบเลข Signed/Unsigned <span class="grad-text">Overflow และ ERR</span></h2>
+            <p class="slide-subtitle">โจทย์แนวนี้คือแนวที่ออกสอบมากที่สุด — ทำตามอัลกอริทึม 3 ขั้นตอนนี้ทุกครั้ง แล้วทุกข้อจะกลายเป็นเรื่องง่าย</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">🎯 วิธีทำในห้องสอบ · Algorithm 3 ขั้นตอน ใช้ได้กับทุกข้อ</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>1. คำนวณผลก่อน (เหมือนเลขคณิตปกติ)</b> — ไม่ต้องสนใจ N บิตตอนนี้ เช่น -125-10 = -135, 200+70 = 270</div>
+                <div class="step-box"><b>2. เช็ค Operand (ตัวเลขในโจทย์เอง)</b> — ถ้าตัวเลขที่โจทย์ให้มาตัวใดตัวหนึ่งเกินช่วงของระบบนั้นอยู่แล้ว → ตอบ <b class="ans-err">ERR</b> ทันที ไม่ต้องคำนวณต่อ</div>
+                <div class="step-box"><b>3. เช็คผลลัพธ์</b> — ถ้า operand ทุกตัวอยู่ในช่วงแล้ว แต่ผลลัพธ์จากขั้น 1 เกินช่วง → เกิด <b>Wrap Around</b>: บวกหรือลบด้วย 2<sup>N</sup> จนกว่าจะกลับเข้าช่วง</div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ทำไมต้อง Wrap Around · หน่วยความจำมีแค่ N บิต เก็บได้แค่ 2<sup>N</sup> แบบ</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>ตัวอย่าง:</b> 8-bit unsigned: <code>200 + 70</code></div>
+                  <div class="step-box"><b>1.</b> คำนวณตรง ๆ: <code>200 + 70 = 270</code></div>
+                  <div class="step-box"><b>2.</b> แต่ 8-bit unsigned เก็บได้แค่ <code>0 ถึง 255</code> เท่านั้น (256 แบบ) — 270 เกินไป</div>
+                  <div class="step-box"><b>3.</b> ตัวเลขที่เกินจะ "ล้น" ออกไป เหลือแค่ส่วนที่พอดีกับ 8 บิต — คำนวณด้วย <b>modulo 256</b>: <code>270 mod 256 = 14</code></div>
+                  <div class="step-box"><b>4.</b> คำตอบ: <b class="ans-ok">14</b></div>
+                </div>
+              </div>
+              <div class="flex" style="flex-direction:column;gap:16px">
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="calculator" class="cyan"></i>🧮 วิธีใช้เครื่องคิดเลขหา mod</h3>
+                  <p class="card-text small">ถ้าเครื่องมีปุ่ม <code>mod</code>: กด <code>270 → mod → 256 → =</code> ได้ 14 ทันที<br />ถ้าไม่มี ให้ทำมือ: <code>270 ÷ 256 = 1.05...</code> ปัดเศษทิ้ง เหลือ 1 → <code>270 - (1×256) = 14</code></p>
+                </div>
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="minus-circle" class="cyan"></i>Wrap Around ฝั่งลบ · 70 - 200</h3>
+                  <p class="card-text small">8-bit unsigned: <code>70 - 200 = -130</code> ทางคณิตศาสตร์ แต่ unsigned เก็บค่าลบไม่ได้ ผลจึงวนกลับมาบวกด้วย 256: <code>-130 + 256 = 126</code> <span class="ans-ok">✅</span></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">🎯 ตัวอย่างแบบข้อสอบทีละขั้น · 8-bit signed: -125 - 10</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>1. Range ของระบบ:</b> signed 8-bit = -128 ถึง 127</div>
+                <div class="step-box"><b>2. เช็ค operand:</b> -125 และ 10 อยู่ในช่วง -128..127 ทั้งคู่ → ผ่าน ยังไม่ ERR</div>
+                <div class="step-box"><b>3. คำนวณ:</b> -125 - 10 = -135</div>
+                <div class="step-box"><b>4. เช็คผลลัพธ์:</b> -135 ต่ำกว่า -128 → เกินช่วง → เกิด Overflow ต้อง Wrap Around</div>
+                <div class="step-box"><b>5. Wrap Around:</b> บวกด้วย 2<sup>8</sup> = 256: <code>-135 + 256 = 121</code></div>
+                <div class="step-box"><b>6. คำตอบ: <b class="ans-ok">121</b></b> (ค่าอยู่ในช่วง -128..127 แล้ว ✅ ตรวจผ่าน)</div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">Hex Addition · บวกเลข Hex ได้ 2 วิธี · 0xFA + 0x25 (8-bit unsigned)</span>
+              <div class="split" style="gap:16px">
+                <div>
+                  <p class="text-2" style="font-size:13.5px;font-weight:700;margin-bottom:6px">วิธีที่ 1 · บวกในฐาน Hex ตรง ๆ</p>
+                  <div class="step-list">
+                    <div class="step-box"><code>FA + 25 = 11F</code> (บวกแบบ Hex, ทดหลักแบบฐาน 16)</div>
+                    <div class="step-box">8-bit เก็บได้แค่ 2 หลัก Hex (8 บิต) — <code>11F</code> มี 3 หลัก เกินมา 1 หลัก (256) ตัดหลักที่เกินทิ้ง → เหลือ <code>0x1F</code></div>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-2" style="font-size:13.5px;font-weight:700;margin-bottom:6px">วิธีที่ 2 · แปลงเป็น Decimal ก่อน (แนะนำ — ผิดพลาดยากกว่า)</p>
+                  <div class="step-list">
+                    <div class="step-box"><code>0xFA = 250</code>, <code>0x25 = 37</code></div>
+                    <div class="step-box"><code>250 + 37 = 287</code> → เกิน 255 → <code>287 mod 256 = 31</code></div>
+                    <div class="step-box">คำตอบ: <b class="ans-ok">31</b> = <code>0x1F</code> ✅ ตรงกับวิธีที่ 1</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">Signed Hex Arithmetic · บิตเดียวกัน คำตอบต่างกันตาม signed/unsigned · 0xC8 + 0xC4 (8-bit)</span>
+              <table class="num-table mt-3">
+                <tr><th>ตีความแบบ</th><th>แปลงค่าแต่ละตัว</th><th>บวกกัน</th><th>ผลลัพธ์</th></tr>
+                <tr><td><b>Unsigned</b></td><td>0xC8=200, 0xC4=196</td><td>200+196=396 → เกิน 255 → 396 mod 256</td><td class="ans-ok">140</td></tr>
+                <tr><td><b>Signed</b></td><td>0xC8=200-256=-56, 0xC4=196-256=-60</td><td>-56+(-60)=-116 → อยู่ในช่วง -128..127</td><td class="ans-ok">-116</td></tr>
+              </table>
+              <p class="text-3 mt-3" style="font-size:13px">บิตแพทเทิร์นเดียวกันเป๊ะ ๆ แต่ตีความต่างกันแล้วได้คำตอบคนละค่า — นี่คือใจความสำคัญที่สุดของบทนี้</p>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">จับมือทำโจทย์จากข้อสอบทั้งชุด · ระบบ 8-bit (และ 32-bit)</span>
+              <table class="num-table mt-3">
+                <tr><th>โจทย์</th><th>ระบบ</th><th>วิธีคิด (3 ขั้น)</th><th>ผล</th></tr>
+                <tr><td>-125-10</td><td>signed</td><td>คำนวณ = -135 → operand ผ่าน → เกินช่วง: -135+256</td><td class="ans-ok">121</td></tr>
+                <tr><td>-125-126</td><td>signed</td><td>คำนวณ = -251 → operand ผ่าน → -251+256</td><td class="ans-ok">5</td></tr>
+                <tr><td>-125-130</td><td>signed</td><td>ขั้น 2: -130 เกินช่วง signed (-128..127)</td><td class="ans-err">ERR</td></tr>
+                <tr><td>-125-10</td><td>unsigned</td><td>ขั้น 2: -125 เป็นค่าลบ — unsigned ใช้ค่าลบไม่ได้</td><td class="ans-err">ERR</td></tr>
+                <tr><td>200+70</td><td>unsigned</td><td>คำนวณ = 270 → operand ผ่าน → 270-256</td><td class="ans-ok">14</td></tr>
+                <tr><td>70-200</td><td>unsigned</td><td>คำนวณ = -130 → ผลลบเกินช่วง → 256-130</td><td class="ans-ok">126</td></tr>
+                <tr><td>0xC8+0xC4</td><td>unsigned</td><td>200+196 = 396 → เกิน 255 → 396-256</td><td class="ans-ok">140</td></tr>
+                <tr><td>0xC8+0xC4</td><td>signed</td><td>0xC8=-56, 0xC4=-60 → -116 อยู่ในช่วง</td><td class="ans-ok">-116</td></tr>
+                <tr><td>0xFFFFFFFB+0x00000007</td><td>unsigned 32-bit</td><td>4,294,967,291+7 = 4,294,967,298 → เกิน 2<sup>32</sup>-1 → ลบ 2<sup>32</sup></td><td class="ans-ok">2</td></tr>
+                <tr><td>-140 → เลขฐาน 16</td><td>signed 8-bit</td><td>ขั้น 2: -140 ต่ำกว่า -128 → แทนไม่ได้</td><td class="ans-err">ERR</td></tr>
+                <tr><td>-140 → เลขฐาน 16</td><td>unsigned 8-bit</td><td>ขั้น 2: ค่าลบใน unsigned → แทนไม่ได้</td><td class="ans-err">ERR</td></tr>
+              </table>
+              <p class="text-3 mt-3" style="font-size:13px">ตัวอย่าง 32-bit: 0xFFFFFFFB = 4,294,967,291 (ใกล้ 2<sup>32</sup>) — หา unsigned ได้จาก invert+1 หรือคิดว่า 0xFFFFFFFB = 2<sup>32</sup> - 5 ก็ได้ (ลัดกว่า)</p>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="alert-triangle" class="cyan"></i>เมื่อไหร่เป็น ERR</h3>
+                <p class="card-text small">เมื่อตัวเลขที่โจทย์ให้มา (operand) <b class="danger">เกินช่วงของระบบนั้นอยู่แล้ว</b> ก่อนจะคำนวณด้วยซ้ำ — เช็คก่อนเสมอเป็นขั้นที่ 2 ของอัลกอริทึม เช่น signed 8-bit ใช้ -130 หรือ unsigned ใช้ค่าลบ</p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="refresh-ccw" class="cyan"></i>เมื่อไหร่ต้อง Wrap Around</h3>
+                <p class="card-text small">เมื่อ operand ทุกตัวอยู่ในช่วงแล้ว แต่ <b>ผลลัพธ์จากการคำนวณ</b>เกินช่วง → บวก/ลบด้วย 2<sup>N</sup> จนกลับเข้าช่วง เช่น 270-256=14, 256-130=126</p>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">⚠️ ข้อสอบชอบหลอก — เช็คทุกข้อก่อนตอบ</span>
+              <div class="step-list mt-3">
+                <div class="step-box">Signed กับ Unsigned ให้คำตอบต่างกันเสมอ แม้ตัวเลขในโจทย์จะเหมือนกัน</div>
+                <div class="step-box">Bit pattern เดียวกันอาจมีค่าต่างกัน 2 แบบ ขึ้นกับว่าตีความแบบไหน</div>
+                <div class="step-box">MSB = 1 ไม่ได้แปลว่าติดลบเสมอ — ติดลบเฉพาะตอนตีความแบบ signed</div>
+                <div class="step-box">ต้องดูจำนวนบิต (N) ก่อนคำนวณทุกครั้ง — ช่วงของ 6-bit กับ 8-bit ไม่เท่ากัน</div>
+                <div class="step-box">Overflow ของระบบ N บิต ไม่เหมือนเลขคณิตธรรมดา — ต้องเช็ค Range เสมอ</div>
+                <div class="step-box">1 หลัก Hex = 4 บิตเสมอ — ใช้แปลงเร็วกว่าไปทาง Decimal</div>
+                <div class="step-box">การลบเลข unsigned อาจได้ผลลบทางคณิตศาสตร์ ซึ่งต้อง Wrap Around เสมอ (unsigned เก็บค่าลบไม่ได้)</div>
+                <div class="step-box">อย่าลืมเช็คว่าโจทย์ต้องการคำตอบเป็น Decimal หรือ Hex — บางข้อให้โจทย์เป็น Hex แต่ถามคำตอบเป็น Decimal</div>
+                <div class="step-box">อย่าตอบตามสัญชาตญาณ (intuition) — ต้องตรวจ Range ทุกครั้งก่อนสรุปคำตอบ</div>
               </div>
             </div>
           </div>
