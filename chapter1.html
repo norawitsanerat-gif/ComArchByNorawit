@@ -249,7 +249,7 @@
               </p>
 
               <div class="stat-chips" style="justify-content:center;margin-top:24px">
-                <span class="stat-chip"><i data-lucide="layers"></i> 21 Slides</span>
+                <span class="stat-chip"><i data-lucide="layers"></i> 30 Slides</span>
                 <span class="stat-chip"><i data-lucide="help-circle"></i> 10 Quiz</span>
                 <span class="stat-chip"><i data-lucide="square-stack"></i> 20 Flashcards</span>
                 <span class="stat-chip"><i data-lucide="book-marked"></i> 32 Glossary</span>
@@ -631,8 +631,69 @@
           </div>
         </section>
 
-        <!-- ============ SLIDE 12 · NUMBER BASE CONVERSION ============ -->
-        <section class="slide-view" data-title="เลขฐาน 2 / 10 / 16 — แปลงไปมาให้คล่อง" aria-label="สไลด์ 12: แปลงเลขฐาน">
+        <!-- ============ SLIDE 12 · BINARY STEP-BY-STEP ============ -->
+        <section class="slide-view" data-title="เลขฐานสองทีละขั้น — ค่าประจำตำแหน่ง 8|4|2|1" aria-label="สไลด์ 12: เลขฐานสองทีละขั้น">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">NUMBER SYSTEMS · BINARY</p>
+            <h2 class="slide-title">เลขฐานสอง (Binary) — <span class="grad-text">ทีละขั้นจากศูนย์</span></h2>
+            <p class="slide-subtitle">ระบบเลขที่เราใช้ทุกวันคือ <b class="cyan">Decimal (ฐาน 10)</b> แต่คอมพิวเตอร์เก็บข้อมูลเป็น <b class="cyan">Binary (ฐาน 2)</b> — มีตัวเลขแค่ 0 กับ 1</p>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">หลักคิด · เลขทุกตำแหน่งมี "ค่า" ของมัน</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">Decimal ใช้ตัวเลข 10 ตัว (0–9) — แต่ละตำแหน่งคูณ 10: <code>258 = 2×100 + 5×10 + 8×1</code></div>
+                  <div class="step-box">Binary ใช้ตัวเลขแค่ 2 ตัว (0, 1) — แต่ละตำแหน่งคูณ 2: หลัก <b class="cyan">8 | 4 | 2 | 1</b> (คือ 2³, 2², 2¹, 2⁰)</div>
+                  <div class="step-box">บิตที่เป็น <b class="success">1</b> = เอามาบวก · บิตที่เป็น <b>0</b> = ข้ามไป</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ตัวอย่างแรก · 1011₂ มีค่าเท่าไหร่?</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">เขียนบิตเรียง: <code>1 0 1 1</code> แล้ววางค่าประจำตำแหน่งข้างใต้: <code>8 | 4 | 2 | 1</code></div>
+                  <div class="step-box">เอาเฉพาะตำแหน่งที่มีบิต 1: <code>1×8 + 0×4 + 1×2 + 1×1</code></div>
+                  <div class="step-box">บวกกัน: <code>8 + 0 + 2 + 1 = <b class="ans-ok">11</b></code></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ฝึกอ่าน ง่าย → กลาง → ยาก · ใช้ค่าประจำตำแหน่ง 8|4|2|1 เหมือนเดิมทุกข้อ</span>
+              <div class="step-list mt-3">
+                <div class="step-box">🟢 <b>ง่าย:</b> <code>0011</code> = 0+0+2+1 = <b class="ans-ok">3</b> · <code>0101</code> = 0+4+0+1 = <b class="ans-ok">5</b></div>
+                <div class="step-box">🟡 <b>กลาง:</b> <code>1100</code> = 8+4+0+0 = <b class="ans-ok">12</b> · <code>1010</code> = 8+0+2+0 = <b class="ans-ok">10</b></div>
+                <div class="step-box">🔴 <b>ยาก:</b> <code>1111</code> = 8+4+2+1 = <b class="ans-ok">15</b> (ค่าเต็ม 4 บิต) · ขยายเป็น 8 บิต: <code>11111111</code> = 128+64+32+16+8+4+2+1 = <b class="ans-ok">255</b></div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">นับเลขแบบคอมพิวเตอร์ · เริ่มจาก 0 ขึ้นไป</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">0, 1 → <b>2</b> = <code>10</code> (หมดเลขให้ใช้แล้ว จึงทดขึ้นหลักถัดไป เหมือน 9→10)</div>
+                  <div class="step-box">3 = <code>11</code> → 4 = <code>100</code> → 5 = <code>101</code> → 6 = <code>110</code> → 7 = <code>111</code></div>
+                  <div class="step-box">สังเกต: พอครบ 2 บิต (11) ต้องเพิ่มเป็น 3 บิต (100) — <b>1 บิตเพิ่ม = จำนวนแบบเพิ่ม 2 เท่า</b> เสมอ</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">แปลงกลับ · Decimal → Binary (วิธีลบ 2^N ที่ใหญ่สุดทีละตัว)</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">ตัวอย่าง: <code>13</code> → 2³=8 ใหญ่สุดที่ยังไม่เกิน → เอา 1 ที่หลัก 8: <code>13−8 = 5</code></div>
+                  <div class="step-box">2²=4 ใหญ่สุดที่ยังไม่เกิน 5 → เอา 1 ที่หลัก 4: <code>5−4 = 1</code> → 2¹=2 เกิน 1 → 0 ที่หลัก 2</div>
+                  <div class="step-box">2⁰=1 = 1 → เอา 1 → ได้ <code>1101</code> <span class="ans-ok">✅</span> (ตรวจกลับ: 8+4+0+1 = 13)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>Exam Tip</b>ค่าประจำตำแหน่งของ 8 บิตคือ <b class="warning">128, 64, 32, 16, 8, 4, 2, 1</b> — จำให้ได้แบบท่องสูตรคูณ แล้วข้อสอบแปลงเลขจะเร็วขึ้นมาก</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 13 · NUMBER BASE CONVERSION ============ -->
+        <section class="slide-view" data-title="เลขฐาน 2 / 10 / 16 — แปลงไปมาให้คล่อง" aria-label="สไลด์ 13: แปลงเลขฐาน">
           <div class="slide-inner">
             <p class="slide-eyebrow">NUMBER SYSTEMS</p>
             <h2 class="slide-title">เลขฐาน 2 / 10 / 16 — <span class="grad-text">แปลงไปมาให้คล่อง</span></h2>
@@ -704,7 +765,7 @@
         </section>
 
         <!-- ============ SLIDE 13 · UNSIGNED RANGE ============ -->
-        <section class="slide-view" data-title="Unsigned Range และการหาจำนวนบิตที่ต้องใช้" aria-label="สไลด์ 13: Unsigned Range">
+        <section class="slide-view" data-title="Unsigned Range และการหาจำนวนบิตที่ต้องใช้" aria-label="สไลด์ 14: Unsigned Range">
           <div class="slide-inner">
             <p class="slide-eyebrow">NUMBER SYSTEMS</p>
             <h2 class="slide-title">Unsigned Range — <span class="grad-text">ช่วงค่าแบบไม่มีเครื่องหมาย</span></h2>
@@ -770,7 +831,7 @@
         </section>
 
         <!-- ============ SLIDE 14 · SIGNED RANGE, MSB, SIGN BIT ============ -->
-        <section class="slide-view" data-title="Signed Range, MSB และ Sign Bit" aria-label="สไลด์ 14: Signed Range">
+        <section class="slide-view" data-title="Signed Range, MSB และ Sign Bit" aria-label="สไลด์ 15: Signed Range">
           <div class="slide-inner">
             <p class="slide-eyebrow">NUMBER SYSTEMS</p>
             <h2 class="slide-title">Signed Range, MSB <span class="grad-text">และ Sign Bit</span></h2>
@@ -835,7 +896,7 @@
         </section>
 
         <!-- ============ SLIDE 15 · TWO'S COMPLEMENT ============ -->
-        <section class="slide-view" data-title="Two's Complement — แปลงเป็นค่าลบ (ไปและกลับ)" aria-label="สไลด์ 15: Two's Complement">
+        <section class="slide-view" data-title="Two's Complement — แปลงเป็นค่าลบ (ไปและกลับ)" aria-label="สไลด์ 16: Two's Complement">
           <div class="slide-inner">
             <p class="slide-eyebrow">NUMBER SYSTEMS</p>
             <h2 class="slide-title">Two's Complement — <span class="grad-text">แปลงเป็นค่าลบ (ไปและกลับ)</span></h2>
@@ -891,7 +952,7 @@
         </section>
 
         <!-- ============ SLIDE 16 · ARITHMETIC, OVERFLOW, WRAP-AROUND, ERR ============ -->
-        <section class="slide-view" data-title="บวก-ลบเลข Signed/Unsigned, Overflow และ ERR" aria-label="สไลด์ 16: การบวก-ลบ และ Overflow">
+        <section class="slide-view" data-title="บวก-ลบเลข Signed/Unsigned, Overflow และ ERR" aria-label="สไลด์ 17: การบวก-ลบ และ Overflow">
           <div class="slide-inner">
             <p class="slide-eyebrow">NUMBER SYSTEMS · ARITHMETIC</p>
             <h2 class="slide-title">บวก-ลบเลข Signed/Unsigned <span class="grad-text">Overflow และ ERR</span></h2>
@@ -1019,8 +1080,250 @@
           </div>
         </section>
 
-        <!-- ============ SLIDE 15 · SUMMARY ============ -->
-        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 15: สรุปบทเรียน">
+        <!-- ============ SLIDE 18 · BASIC CALCULATOR ============ -->
+        <section class="slide-view" data-title="เครื่องคิดเลขพื้นฐาน — คิดเลขในห้องสอบโดยไม่พึ่งเครื่องวิทยาศาสตร์" aria-label="สไลด์ 18: เครื่องคิดเลขพื้นฐาน">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM SKILL · BASIC CALCULATOR</p>
+            <h2 class="slide-title">เครื่องคิดเลขพื้นฐาน — <span class="grad-text">ชนะข้อสอบด้วยปุ่ม + − × ÷ =</span></h2>
+            <p class="slide-subtitle">ข้อสอบบทนี้ทุกคำตอบมาจากเลขยกกำลัง 2 — เครื่องคิดเลขธรรมดา (มีแค่ <code>+ − × ÷ =</code>) ก็พอ ไม่ต้องมีปุ่ม <code>^</code> หรือโหมดโปรแกรมเมอร์</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ท่าที่ 1 · หา 2<sup>N</sup> ด้วยการคูณซ้ำ — ตัวอย่าง 2<sup>6</sup></span>
+              <div class="step-list mt-3">
+                <div class="step-box">กด: <code>2 × 2 =</code> → ขึ้น <b class="cyan">4</b> (= 2²) — จุดประสงค์: หา 2 คูณ 2 ก่อน</div>
+                <div class="step-box">กดต่อ: <code>× 2 =</code> → ขึ้น <b class="cyan">8</b> (= 2³) → กดซ้ำไปเรื่อย ๆ: <code>× 2 =</code> → 16 → 32 → <b class="cyan">64</b></div>
+                <div class="step-box">นับจำนวนครั้งที่กด <code>× 2 =</code> ต้องได้ <b class="cyan">N−1 ครั้ง</b> หลังกด <code>2 × 2</code> แรก (ที่นี่: 5 ครั้ง → 64 = 2⁶)</div>
+                <div class="step-box">ตรวจ: <code>2×2×2×2×2×2 = 64</code> — นับ 2 ทั้งหมด 6 ตัว = ยกกำลัง 6</div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ท่าที่ 2 · ค่าสูงสุด unsigned = 2<sup>N</sup> − 1 — ตัวอย่าง 6 บิต</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">ขั้นแรกหา 2⁶ ก่อน: <code>2 × 2 =</code> แล้วกด <code>× 2 =</code> อีก 5 ครั้ง → 64</div>
+                  <div class="step-box">กดต่อ: <code>− 1 =</code> → ขึ้น <b class="ans-ok">63</b></div>
+                  <div class="step-box">ความหมาย: 6 บิตแทนแบบได้ 64 แบบ (0–63) — ลบ 1 เพราะเริ่มนับที่ 0</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ท่าที่ 3 · signed ใช้ 2<sup>N−1</sup> — ตัวอย่าง 6 บิต</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">signed เสีย 1 บิตให้เครื่องหมาย → เหลือ 5 บิต → ต้องหา 2⁵: กด <code>2 × 2 =</code> แล้วกด <code>× 2 =</code> อีก 3 ครั้ง → <b class="cyan">32</b></div>
+                  <div class="step-box">ค่าสูงสุด = <code>32 − 1 = 31</code> → ค่าต่ำสุด = <code>−32</code></div>
+                  <div class="step-box">จุดสำคัญ: จำนวนครั้งที่กด <code>× 2</code> ลดลง 1 ครั้งจาก unsigned — เพราะบิตน้อยลง 1</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">ท่าที่ 4 · Wrap-around (mod 2<sup>N</sup>) — 8 บิต</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">ผลบวกเกิน: <code>200 + 70 =</code> → 270 → กด <code>− 256 =</code> → <b class="ans-ok">14</b> (ลบ 256 เพราะ 8 บิต = 2⁸)</div>
+                  <div class="step-box">ผลลบติดลบ: <code>70 − 200 =</code> → −130 → กด <code>+ 256 =</code> → <b class="ans-ok">126</b></div>
+                  <div class="step-box">หรือหา 256 ได้จากท่าที่ 1: <code>2 × 2 =</code> + กด <code>× 2 =</code> อีก 6 ครั้ง = 256</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ท่าที่ 5 · Hex → Decimal — 0xFA</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">แยก: F = 15, A = 10 → หลักซ้ายคูณ 16 ก่อน: <code>15 × 16 =</code> → 240</div>
+                  <div class="step-box">บวกหลักขวาตามหลัง: <code>+ 10 =</code> → <b class="ans-ok">250</b></div>
+                  <div class="step-box">จำสูตร: <code>Hex → Decimal = (หลักแรก × 16) + หลักที่สอง</code> — กดแค่ 3 ปุ่ม</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ท่าที่ 6 · ขึ้นไปถึง 2<sup>32</sup> โดยไม่ต้องกด 32 ครั้ง</span>
+              <div class="step-list mt-3">
+                <div class="step-box">จำ "บันได" นี้: 2¹⁰ = <b class="cyan">1,024</b> → 2²⁰ = 1,048,576 → 2³⁰ = 1,073,741,824 → คูณ 2 ต่ออีก 2 ครั้ง → 2³² = <b class="cyan">4,294,967,296</b></div>
+                <div class="step-box">วิธีกด: <code>1024 × 1024 =</code> → 1,048,576 (2²⁰) → <code>× 1024 =</code> → 1,073,741,824 (2³⁰) → <code>× 2 = × 2 =</code> → 4,294,967,296</div>
+                <div class="step-box">สำหรับ 32 บิต จำให้ได้ว่า unsigned สูงสุด = <b>4,294,967,295</b> และ signed อยู่ที่ <b>−2,147,483,648 ถึง 2,147,483,647</b></div>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="alert-triangle" class="cyan"></i>ระวังพลาดจุดเดียวของบทนี้</h3>
+                <p class="card-text small">นับจำนวนครั้งที่กด <code>× 2 =</code> ให้ถูก — กดน้อยไป 1 ครั้งจะได้ 2<sup>N−1</sup> แทน 2<sup>N</sup> (ผิดทั้งข้อ!) แนะนำให้ขีดนับลงบนกระดาษไปด้วย</p>
+              </div>
+              <div class="tip-box tip-remember">
+                <i data-lucide="lightbulb"></i>
+                <div><b>จำแบบนี้</b>เครื่องคิดเลขพื้นฐานทำได้ครบทุกอย่างที่ข้อสอบต้องการ — ต้องรู้แค่ว่า "กำลังคำนวณอะไรอยู่" ก่อนกดปุ่มทุกครั้ง</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 19 · RANGE CHEAT SHEET ============ -->
+        <section class="slide-view" data-title="ช่วงค่าครบชุด — 4, 6, 8, 16, 32 บิต" aria-label="สไลด์ 19: ช่วงค่าครบชุด">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">RANGE CHEAT SHEET</p>
+            <h2 class="slide-title">ช่วงค่าครบชุด — <span class="grad-text">4, 6, 8, 16, 32 บิต</span></h2>
+            <p class="slide-subtitle">รวมทุกช่วงค่าที่ต้องใช้ในข้อสอบไว้ในตารางเดียว — คำนวณเองได้ทุกแถวด้วยเครื่องคิดเลขพื้นฐาน</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ตารางช่วงค่า · ต้องรู้ว่ามาจากสูตรไหน (ไม่ใช่จำตัวเลขลอย ๆ)</span>
+              <table class="num-table mt-3">
+                <tr><th>N บิต</th><th>2<sup>N</sup></th><th>Unsigned (0 .. 2<sup>N</sup>−1)</th><th>Signed (−2<sup>N−1</sup> .. 2<sup>N−1</sup>−1)</th></tr>
+                <tr><td>4</td><td>16</td><td>0 .. 15</td><td>−8 .. 7</td></tr>
+                <tr><td>6</td><td class="hi">64</td><td class="hi">0 .. 63</td><td class="hi">−32 .. 31</td></tr>
+                <tr><td>8</td><td class="hi">256</td><td class="hi">0 .. 255</td><td class="hi">−128 .. 127</td></tr>
+                <tr><td>16</td><td>65,536</td><td>0 .. 65,535</td><td>−32,768 .. 32,767</td></tr>
+                <tr><td>32</td><td>4,294,967,296</td><td>0 .. 4,294,967,295</td><td>−2,147,483,648 .. 2,147,483,647</td></tr>
+              </table>
+              <p class="text-3 mt-2" style="font-size:13px">แถวที่ไฮไลต์ (6 และ 8 บิต) คือแถวที่ข้อสอบใช้บ่อยที่สุด — ส่วน 4, 16, 32 บิตหาได้จากสูตรเสมอ</p>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">วิธีคำนวณทีละแถวด้วยเครื่องคิดเลขพื้นฐาน</span>
+                <div class="step-list mt-3">
+                  <div class="step-box"><b>4 บิต:</b> 2⁴ = <code>2×2×2×2 = 16</code> → unsigned 0..15 · signed −8..7 (2³ = 8)</div>
+                  <div class="step-box"><b>6 บิต:</b> 2⁶ = <code>2×2×2×2×2×2 = 64</code> → unsigned 0..63 · signed −32..31</div>
+                  <div class="step-box"><b>8 บิต:</b> 2⁸ = 64×2×2 = 256 → unsigned 0..255 · signed −128..127</div>
+                  <div class="step-box"><b>16 บิต:</b> 2¹⁶ = <code>256 × 256 = 65,536</code> → signed −32,768..32,767</div>
+                  <div class="step-box"><b>32 บิต:</b> 2³² = 65,536 × 65,536 = 4,294,967,296 → signed ±2,147,483,648</div>
+                </div>
+              </div>
+              <div class="flex" style="flex-direction:column;gap:16px">
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="eye" class="cyan"></i>สูตรแค่ 2 บรรทัด</h3>
+                  <p class="card-text small">Unsigned: <code>0 ถึง 2<sup>N</sup> − 1</code><br />Signed: <code>−2<sup>N−1</sup> ถึง 2<sup>N−1</sup> − 1</code></p>
+                </div>
+                <div class="card">
+                  <h3 class="card-title"><i data-lucide="list-ordered" class="cyan"></i>ตัวเลขติดตัวที่ควรจำได้</h3>
+                  <p class="card-text small">8 บิต: <b>255, 256, 128, 127</b> · 6 บิต: <b>63, 64, 32, 31</b> · 32 บิต: <b>4,294,967,295, 4,294,967,296, 2,147,483,647</b></p>
+                </div>
+                <div class="tip-box tip-exam">
+                  <i data-lucide="graduation-cap"></i>
+                  <div><b>Exam Tip</b>เจอคำว่า signed ให้คิด "N−1" ทันที: 6 บิต signed = 5 บิตค่า = 2⁵ = 32 → ช่วง ±32 (บวกได้ถึง 31)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>unsigned เริ่มที่ 0 เสมอ · signed ฝั่งลบมีค่าเกินฝั่งบวกอยู่ 1 (เพราะ 0 ถูกนับอยู่ฝั่งบวก) — เช่น 8 บิต signed = −128 ถึง 127</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 20 · FIXED-WIDTH ARITHMETIC ============ -->
+        <section class="slide-view" data-title="บวก-ลบ Fixed Width — กติกาทั้ง 4 แบบ" aria-label="สไลด์ 20: กติกาบวก-ลบ">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">FIXED-WIDTH ARITHMETIC</p>
+            <h2 class="slide-title">บวก-ลบในระบบ Fixed Width — <span class="grad-text">กติกาทั้ง 4 แบบ</span></h2>
+            <p class="slide-subtitle">ระบบ N บิตคือ "กล่อง" ที่จุตัวเลขได้จำกัด — คำตอบทางคณิตศาสตร์อาจใส่ลงกล่องไม่ได้ จึงต้องรู้ว่าเมื่อไหร่ <b class="cyan">Wrap Around</b> และเมื่อไหร่ <b class="danger">ERR</b></p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">กติกา 4 แบบ · ระบบ 8 บิต (ใช้กับ N บิตใดก็ได้)</span>
+              <table class="num-table mt-3">
+                <tr><th>ระบบ</th><th>การกระทำ</th><th>เมื่อผลลัพธ์เกินช่วง</th><th>วิธีแก้</th><th>ตัวอย่าง</th></tr>
+                <tr><td><b>Unsigned</b></td><td>บวก</td><td>ผล &gt; 2<sup>N</sup>−1</td><td>ลบ 2<sup>N</sup></td><td>200+70=270 → 270−256 = <b class="ans-ok">14</b></td></tr>
+                <tr><td><b>Unsigned</b></td><td>ลบ</td><td>ผลติดลบ</td><td>บวก 2<sup>N</sup></td><td>70−200=−130 → −130+256 = <b class="ans-ok">126</b></td></tr>
+                <tr><td><b>Signed</b></td><td>บวก</td><td>ผลนอก −2<sup>N−1</sup>..2<sup>N−1</sup>−1</td><td>บวก/ลบ 2<sup>N</sup></td><td>−56+(−60) = <b class="ans-ok">−116</b> (ในช่วง)</td></tr>
+                <tr><td><b>Signed</b></td><td>ลบ</td><td>ผลนอกช่วง signed</td><td>บวก/ลบ 2<sup>N</sup></td><td>−125−126=−251 → −251+256 = <b class="ans-ok">5</b></td></tr>
+              </table>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">🎯 อัลกอริทึม 3 ขั้น · ใช้กับทุกข้อที่บวก-ลบ</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>1. ตรวจ operand (ตัวเลขในโจทย์)</b> — ตัวใดตัวหนึ่งเกินช่วงของระบบอยู่แล้ว → ตอบ <b class="ans-err">ERR</b> ทันที (เช่น signed 8 บิตเจอ −130, unsigned เจอค่าลบ)</div>
+                <div class="step-box"><b>2. คำนวณตามเลขคณิตปกติ</b> — ยังไม่ต้องคิดเรื่อง N บิต เช่น −125−10 = −135</div>
+                <div class="step-box"><b>3. ตรวจผลลัพธ์</b> — ถ้าเกินช่วง → <b>Wrap Around</b>: บวกหรือลบ 2<sup>N</sup> จนกลับเข้าช่วง แล้วตอบค่านั้น</div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">Wrap Around ทำงานยังไง · เหมือนเข็มนาฬิกา</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">8 บิต = กล่อง 8 ช่อง ใส่ได้ 0..255 — พอ 255 แล้วบวก 1 ต่อ มัน "วน" กลับมา 0 (เพราะหลักที่ 9 ไม่มีที่เก็บ)</div>
+                  <div class="step-box">สูตร: ผลลัพธ์ mod 2<sup>N</sup> — <code>270 mod 256 = 14</code>, <code>−130 mod 256 = 126</code></div>
+                  <div class="step-box">🧮 เครื่องคิดเลข: บวกเกิน → กด <code>− 256 =</code> · ลบติดลบ → กด <code>+ 256 =</code></div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">เมื่อไหร่ต้องตอบ ERR</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">ค่า <b>ที่โจทย์ให้มา</b> เกินช่วงตั้งแต่แรก — ยังไม่ต้องคำนวณ เช่น signed 8 บิตกับ −140 (ต่ำกว่า −128)</div>
+                  <div class="step-box">ค่าลบในระบบ <b>unsigned</b> — เช่น −125 ในระบบ unsigned 8 บิต (unsigned เก็บลบไม่ได้)</div>
+                  <div class="step-box">จำง่าย ๆ: <b class="danger">ERR เกิดจาก operand</b> · <b class="cyan">Wrap เกิดจากผลลัพธ์</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2 mt-6">
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="check-circle-2" class="cyan"></i>ตัวอย่างแบบข้อสอบ · −125−126 (signed 8 บิต)</h3>
+                <p class="card-text small">operand −125, −126 อยู่ในช่วง −128..127 ✓ → คำนวณ −251 → เกินช่วง → wrap: <code>256 − 251 = <b class="ans-ok">5</b></code></p>
+              </div>
+              <div class="card">
+                <h3 class="card-title"><i data-lucide="x-circle" class="cyan"></i>ตัวอย่างแบบข้อสอบ · −125−130 (signed 8 บิต)</h3>
+                <p class="card-text small">ขั้นที่ 1 ดักจับได้ก่อน: <b class="danger">−130 ต่ำกว่า −128</b> → เก็บใน 8 บิต signed ไม่ได้ตั้งแต่แรก → <b class="ans-err">ERR</b></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 21 · 32-BIT NUMBERS ============ -->
+        <section class="slide-view" data-title="ระบบ 32 บิต — ช่วงกว้างกว่า กติกาเหมือนเดิม" aria-label="สไลด์ 21: 32 บิต">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">32-BIT NUMBERS</p>
+            <h2 class="slide-title">ระบบ 32 บิต — <span class="grad-text">ช่วงกว้างกว่า กติกาเหมือนเดิม</span></h2>
+            <p class="slide-subtitle">หลักการทุกอย่างเหมือน 8 บิตทุกประการ — ต่างกันแค่ช่วงใหญ่ขึ้นมาก และจำไว้ว่า <b class="cyan">1 หลัก Hex = 4 บิต</b> ดังนั้น 8 หลัก Hex = 32 บิตพอดี</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ช่วงของ 32 บิต (จำคู่กันให้ขึ้นใจ)</span>
+              <div class="step-list mt-3">
+                <div class="step-box">Unsigned: <b class="cyan">0 ถึง 4,294,967,295</b> (= 2³² − 1 = 0xFFFFFFFF)</div>
+                <div class="step-box">Signed: <b class="cyan">−2,147,483,648 ถึง 2,147,483,647</b> (= −2³¹ ถึง 2³¹−1)</div>
+                <div class="step-box">2³² = <b>4,294,967,296</b> — "เลขกลม" ที่ใช้ลบเมื่อเกิด wrap แบบ 32 บิต (เหมือน 256 ของ 8 บิต)</div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">🎯 ตัวอย่างแบบข้อสอบ · 0xFFFFFFFB + 0x00000007 (unsigned 32 บิต)</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>1.</b> อ่านค่า: 0xFFFFFFFB = 4,294,967,291 — วิธีลัด: 0xFFFFFFFB = 2³² − 5 (เพราะ FB = 251 = 256−5)</div>
+                <div class="step-box"><b>2.</b> บวก: 4,294,967,291 + 7 = 4,294,967,298</div>
+                <div class="step-box"><b>3.</b> เช็คช่วง: 4,294,967,298 &gt; 4,294,967,295 → เกิน → wrap: ลบ 2³²</div>
+                <div class="step-box"><b>4.</b> <code>4,294,967,298 − 4,294,967,296 = <b class="ans-ok">2</b></code></div>
+              </div>
+            </div>
+
+            <div class="split mt-6">
+              <div class="visual-box">
+                <span class="vb-label">วิธีลัดด้วย Hex · ไม่ต้องแตะเครื่องคิดเลขเลย</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">บวก hex ตรง ๆ: <code>0xFFFFFFFB + 0x00000007 = 0x1_00000002</code> (หลักเกินมา 1 ตัว = บิตที่ 33)</div>
+                  <div class="step-box">32 บิตจุได้ 8 หลัก Hex → ตัดหลักเกิน (ตัว 1 หน้า) ทิ้ง → เหลือ <code>0x00000002</code></div>
+                  <div class="step-box">ดังนั้นคำตอบ = <b class="ans-ok">2</b> ✅ ตรงกับวิธี decimal ทุกประการ</div>
+                </div>
+              </div>
+              <div class="visual-box">
+                <span class="vb-label">ตีความแบบ signed · เลขที่ขึ้นต้น f…</span>
+                <div class="step-list mt-3">
+                  <div class="step-box">0xFFFFFFFB มี MSB = 1 (F = 1111) → ถ้าตีความแบบ signed = 4,294,967,291 − 2³² = <b class="cyan">−5</b></div>
+                  <div class="step-box">ดังนั้น signed 32-bit: 0xFFFFFFFB = −5 และ 0xFFFFFFFF = −1 (เหมือน 0xFF = −1 ใน 8 บิต)</div>
+                  <div class="step-box">เทคนิค: เลขที่หลักแรก ≥ 8 ในระบบ signed → ลบ 2<sup>N</sup> เสมอ (32 บิตลบ 4,294,967,296)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>Exam Tip</b>เห็นเลข hex ยาว 8 หลัก ให้อ่าน "ห่างจากขอบเท่าไหร่" แทนการแปลงเต็มรูปแบบ — เช่น 0xFFFFFFFB = 2³²−5, 0x00000007 = 7 → บวกกันได้ 2 ทันทีโดยไม่ต้องกดเลขใหญ่</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 22 · SUMMARY ============ -->
+        <section class="slide-view" data-title="Chapter Summary — สรุปบทเรียน" aria-label="สไลด์ 22: สรุปบทเรียน">
           <div class="slide-inner">
             <p class="slide-eyebrow">CHAPTER SUMMARY</p>
             <h2 class="slide-title">สรุปบทเรียน</h2>
@@ -1034,7 +1337,7 @@
         </section>
 
         <!-- ============ SLIDE 12 · CHEAT SHEET ============ -->
-        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 16: สูตรจำก่อนสอบ">
+        <section class="slide-view" data-title="Exam Cheat Sheet — สูตรจำก่อนสอบ" aria-label="สไลด์ 23: สูตรจำก่อนสอบ">
           <div class="slide-inner">
             <p class="slide-eyebrow">EXAM CHEAT SHEET</p>
             <h2 class="slide-title">สูตรจำก่อนสอบ</h2>
@@ -1044,7 +1347,7 @@
         </section>
 
         <!-- ============ SLIDE 13 · QUIZ 1 ============ -->
-        <section class="slide-view quiz-slide" data-title="Quiz 1 (ข้อ 1–5)" aria-label="สไลด์ 17: แบบทดสอบชุดที่ 1">
+        <section class="slide-view quiz-slide" data-title="Quiz 1 (ข้อ 1–5)" aria-label="สไลด์ 24: แบบทดสอบชุดที่ 1">
           <div class="slide-inner">
             <p class="slide-eyebrow">QUIZ MODE · PART 1</p>
             <h2 class="slide-title">แบบทดสอบ ชุดที่ 1</h2>
@@ -1054,7 +1357,7 @@
         </section>
 
         <!-- ============ SLIDE 14 · QUIZ 2 ============ -->
-        <section class="slide-view quiz-slide" data-title="Quiz 2 (ข้อ 6–10)" aria-label="สไลด์ 18: แบบทดสอบชุดที่ 2">
+        <section class="slide-view quiz-slide" data-title="Quiz 2 (ข้อ 6–10)" aria-label="สไลด์ 25: แบบทดสอบชุดที่ 2">
           <div class="slide-inner">
             <p class="slide-eyebrow">QUIZ MODE · PART 2</p>
             <h2 class="slide-title">แบบทดสอบ ชุดที่ 2</h2>
@@ -1064,7 +1367,7 @@
         </section>
 
         <!-- ============ SLIDE 15 · FLASHCARDS ============ -->
-        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 19: การ์ดทบทวน">
+        <section class="slide-view" data-title="Flashcards — ทบทวนการ์ด" aria-label="สไลด์ 26: การ์ดทบทวน">
           <div class="slide-inner">
             <p class="slide-eyebrow">REVIEW · FLASHCARDS</p>
             <h2 class="slide-title">Flashcards — ทบทวนความรู้</h2>
@@ -1096,7 +1399,7 @@
         </section>
 
         <!-- ============ SLIDE 16 · GLOSSARY ============ -->
-        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 20: คำศัพท์">
+        <section class="slide-view" data-title="Glossary — คำศัพท์" aria-label="สไลด์ 27: คำศัพท์">
           <div class="slide-inner">
             <p class="slide-eyebrow">REVIEW · GLOSSARY</p>
             <h2 class="slide-title">Glossary — คำศัพท์ที่ควรรู้</h2>
@@ -1111,15 +1414,89 @@
           </div>
         </section>
 
-        <!-- ============ SLIDE 17 · QUICK QUIZ ============ -->
-        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — แบบทดสอบท้ายบท 20 ข้อ" aria-label="สไลด์ 21: ข้อสอบหลังเรียน 20 ข้อ">
+        <!-- ============ SLIDE 28 · POST-LESSON EXAM ============ -->
+        <section class="slide-view quiz-slide" data-title="ข้อสอบหลังเรียน — แบบทดสอบท้ายบท 20 ข้อ" aria-label="สไลด์ 28: ข้อสอบหลังเรียน 20 ข้อ">
           <div class="slide-inner">
             <p class="slide-eyebrow">POST-LESSON EXAM · 20 QUESTIONS</p>
             <h2 class="slide-title" id="examHeadTitle">ข้อสอบหลังเรียน <span class="grad-text">20 ข้อ</span></h2>
-            <p class="slide-subtitle" id="examHeadSub">สอบเก็บคะแนนท้ายบท — ระบบเลข signed/unsigned, Two's Complement และการแปลงเลขฐาน (เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้ ตอบแล้วดูเฉลยทันที)</p>
+            <p class="slide-subtitle" id="examHeadSub">สอบเก็บคะแนนท้ายบท — ระบบเลข signed/unsigned, Two's Complement และการแปลงเลขฐาน (เรียนครบทุกสไลด์ก่อนถึงจะเข้าสอบได้ ตอบแล้วดูผลทันที — กด "ดูวิธีทำทีละขั้น" เพื่อเปิดวิธีคิดแบบละเอียดตั้งแต่ขั้นแรก)</p>
             <div id="quizExam"></div>
           </div>
         </section>
+
+        <!-- ============ SLIDE 29 · EXAM SOLUTIONS 1–10 ============ -->
+        <section class="slide-view" data-title="เฉลยข้อสอบ 20 ข้อ (ข้อ 1–10) — ทำทีละขั้น" aria-label="สไลด์ 29: เฉลยข้อ 1–10">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM SOLUTIONS · Q1–Q10</p>
+            <h2 class="slide-title">เฉลยข้อสอบ <span class="grad-text">ข้อ 1–10</span> — ทำทีละขั้น</h2>
+            <p class="slide-subtitle">สอบเสร็จแล้ว ค่อยเปิดดูเฉลยได้เลย — ไล่ทีละข้อทีละขั้น ลองทำเองก่อนอ่านเฉลยทุกครั้ง แล้วเทียบกับวิธีของคุณว่าตรงกันไหม</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ส่วนแรก · ช่วงค่าของ 6 บิต (ข้อ 1–4) — ใช้สูตรแค่ 2 บรรทัด</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ข้อ 1 · 6-bit signed ค่ามากสุด?</b><br />🎯 ให้: signed, N=6 · ถาม: max → signed เสีย 1 บิตให้เครื่องหมาย เหลือเก็บค่า 5 บิต<br />🧮 <code>2×2×2×2×2 = 32</code> → max = 32 − 1<br />✔ <b class="ans-ok">31</b> · เทคนิค: max = 2<sup>N−1</sup> − 1 = 2⁵ − 1</div>
+                <div class="step-box"><b>ข้อ 2 · 6-bit signed ค่าน้อยสุด?</b><br />🎯 ให้: signed, N=6 · ถาม: min → ใช้ 2⁵ เหมือนข้อ 1 แต่ฝั่งลบได้เต็ม<br />🧮 <code>2×2×2×2×2 = 32</code> → ใส่เครื่องหมายลบ<br />✔ <b class="ans-ok">−32</b> · เทคนิค: min = −2<sup>N−1</sup> — ฝั่งลบมีค่าเกินฝั่งบวกอยู่ 1 (0 นับอยู่ฝั่งบวก)</div>
+                <div class="step-box"><b>ข้อ 3 · 6-bit unsigned ค่ามากสุด?</b><br />🎯 ให้: unsigned, N=6 · ถาม: max → unsigned ใช้ครบ 6 บิต<br />🧮 <code>2×2×2×2×2×2 = 64</code> → max = 64 − 1<br />✔ <b class="ans-ok">63</b> · เทคนิค: max = 2<sup>N</sup> − 1 = 64 − 1</div>
+                <div class="step-box"><b>ข้อ 4 · 6-bit unsigned ค่าน้อยสุด?</b><br />🎯 ให้: unsigned · ถาม: min → unsigned ไม่มีค่าลบ เริ่มที่ 0<br />🧮 ไม่ต้องกดเครื่องคิดเลข<br />✔ <b class="ans-ok">0</b> · เทคนิค: unsigned min = 0 เสมอ ทุก N</div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ส่วนที่สอง · บวก-ลบ 8 บิต (ข้อ 5–10) — ใช้ 3 ขั้น: เช็ค operand → คำนวณ → เช็คผล</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ข้อ 5 · signed 8 บิต: −125−10</b><br />🎯 ให้: signed 8 บิต (ช่วง −128..127) · ถาม: ผลลบ<br />ขั้น 1: operand −125, −10 อยู่ในช่วง ✓ → ขั้น 2: −125−10 = −135 → ขั้น 3: −135 ต่ำกว่า −128 → wrap<br />🧮 <code>125 + 10 = 135</code> → <code>256 − 135 =</code><br />✔ <b class="ans-ok">121</b> · เทคนิค: ผลลบเกินขอบล่าง → บวก 2<sup>8</sup> = 256</div>
+                <div class="step-box"><b>ข้อ 6 · signed 8 บิต: −125−130</b><br />🎯 ให้: signed 8 บิต · ถาม: ผลลบ<br />ขั้น 1 ดักจับได้ก่อน: <b class="danger">−130 ต่ำกว่า −128</b> → เก็บด้วย 8 บิต signed ไม่ได้ตั้งแต่แรก<br />🧮 ไม่ต้องคำนวณ<br />✔ <b class="ans-err">ERR</b> · เทคนิค: operand เกินช่วง = ERR ทันที ไม่ต้องคิดต่อ</div>
+                <div class="step-box"><b>ข้อ 7 · signed 8 บิต: −125−126</b><br />🎯 ให้: signed 8 บิต · ถาม: ผลลบ<br />ขั้น 1: operand −125, −126 อยู่ในช่วง ✓ → ขั้น 2: −125−126 = −251 → ขั้น 3: −251 ต่ำกว่า −128 → wrap<br />🧮 <code>256 − 251 =</code><br />✔ <b class="ans-ok">5</b> · เทคนิค: −251 + 256 = 5 — วนรอบทีละ 2<sup>8</sup> จนเข้าช่วง</div>
+                <div class="step-box"><b>ข้อ 8 · unsigned 8 บิต: −125−10</b><br />🎯 ให้: unsigned 8 บิต (ช่วง 0..255) · ถาม: ผลลบ<br />ขั้น 1: <b class="danger">−125 เป็นค่าลบ</b> — unsigned เก็บค่าลบไม่ได้ตั้งแต่แรก<br />🧮 ไม่ต้องคำนวณ<br />✔ <b class="ans-err">ERR</b> · เทคนิค: ค่าลบในระบบ unsigned = ERR เสมอ</div>
+                <div class="step-box"><b>ข้อ 9 · unsigned 8 บิต: 200+70</b><br />🎯 ให้: unsigned 8 บิต · ถาม: ผลบวก<br />ขั้น 1: operand 200, 70 อยู่ในช่วง ✓ → ขั้น 2: 200+70 = 270 → ขั้น 3: 270 เกิน 255 → wrap<br />🧮 <code>200 + 70 = 270</code> → <code>− 256 =</code><br />✔ <b class="ans-ok">14</b> · เทคนิค: ผลเกินขอบบน → ลบ 2<sup>8</sup> = 256</div>
+                <div class="step-box"><b>ข้อ 10 · unsigned 8 บิต: 70−200</b><br />🎯 ให้: unsigned 8 บิต · ถาม: ผลลบ<br />ขั้น 1: operand 70, 200 อยู่ในช่วง ✓ → ขั้น 2: 70−200 = −130 → ขั้น 3: ติดลบ → wrap<br />🧮 <code>70 − 200 = −130</code> → <code>+ 256 =</code><br />✔ <b class="ans-ok">126</b> · เทคนิค: ผลติดลบใน unsigned → บวก 2<sup>8</sup> = 256</div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-remember mt-6">
+              <i data-lucide="lightbulb"></i>
+              <div><b>จำแบบนี้</b>ข้อ 5–10 ต่างกันแค่ "ระบบ" กับ "ตัวเลข" — วิธีคิด 3 ขั้นเหมือนกันทุกข้อ: <b class="cyan">operand เกิน → ERR</b> · <b class="cyan">ผลลัพธ์เกิน → wrap</b></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SLIDE 30 · EXAM SOLUTIONS 11–20 ============ -->
+        <section class="slide-view" data-title="เฉลยข้อสอบ 20 ข้อ (ข้อ 11–20) — ทำทีละขั้น" aria-label="สไลด์ 30: เฉลยข้อ 11–20">
+          <div class="slide-inner">
+            <p class="slide-eyebrow">EXAM SOLUTIONS · Q11–Q20</p>
+            <h2 class="slide-title">เฉลยข้อสอบ <span class="grad-text">ข้อ 11–20</span> — ทำทีละขั้น</h2>
+            <p class="slide-subtitle">ต่อจากหน้าเฉลยข้อ 1–10 — ช่วงนี้เป็น Hex, การแปลง และ 32 บิต เปิดทีละข้อ แล้วเทียบกับคำตอบของคุณว่าถูกหรือยัง</p>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ส่วนที่สาม · Hex และการแปลง (ข้อ 11–16)</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ข้อ 11 · unsigned 8 บิต: 0xFA = ? (ตอบ decimal)</b><br />🎯 ให้: 0xFA, unsigned 8 บิต · ถาม: ค่า decimal<br />ขั้น: F=15, A=10 → 15×16 + 10<br />🧮 <code>15 × 16 = 240</code> → <code>+ 10 =</code><br />✔ <b class="ans-ok">250</b> · เทคนิค: Hex → Decimal = (หลักแรก × 16) + หลักสอง · เช็ค 250 ≤ 255 ✓</div>
+                <div class="step-box"><b>ข้อ 12 · signed 8 บิต: 0xFA = ? (ตอบ decimal)</b><br />🎯 ให้: 0xFA, signed 8 บิต · ถาม: ค่า decimal<br />ขั้น: unsigned ก่อน = 250 → MSB = 1 (F = 1111) → เป็นค่าลบ<br />🧮 <code>250 − 256 =</code><br />✔ <b class="ans-ok">−6</b> · เทคนิค: หลักแรก ≥ 8 → signed = unsigned − 2<sup>N</sup></div>
+                <div class="step-box"><b>ข้อ 13 · unsigned 8 บิต: 0xFA + 0x25 = ? (ตอบ decimal)</b><br />🎯 ให้: unsigned 8 บิต · ถาม: ผลบวก<br />ขั้น: 0xFA=250, 0x25=2×16+5=37 → 250+37 = 287 → เกิน 255 → wrap<br />🧮 <code>15×16+10 = 250</code> → <code>+ 37 = 287</code> → <code>− 256 =</code><br />✔ <b class="ans-ok">31</b> · เทคนิค: แปลงเป็น decimal ก่อนเสมอ แล้วค่อยเช็ค wrap (ลัด: บวก hex ได้ 0x11F → ตัดหลักเกิน → 0x1F = 31)</div>
+                <div class="step-box"><b>ข้อ 14 · เลข decimal 10 หลัก ต้องใช้กี่บิต?</b><br />🎯 ให้: เลข 10 หลัก · ถาม: จำนวนบิต n ที่พอ<br />ขั้น: เลข 10 หลักมากสุด = 9,999,999,999 → 2³³ = 8,589,934,592 ยังไม่พอ → 2³⁴ = 17,179,869,184 พอ<br />🧮 2¹⁰=1024 → 2²⁰=1,048,576 → 2³⁰=1,073,741,824 → คูณ 2 ไปเรื่อย ๆ: 2³³ → 2³⁴<br />✔ <b class="ans-ok">34 บิต</b> · เทคนิค: หา n ที่ 2<sup>n</sup> "เพิ่งเกิน" ค่ามากสุด — ไม่ใช่จำเลข 34 แต่มารู้ที่มาของมัน</div>
+                <div class="step-box"><b>ข้อ 15 · signed 8 บิต: −140 เขียนเป็น Hex?</b><br />🎯 ให้: signed 8 บิต · ถาม: รูปแบบ hex<br />ขั้น: เช็คช่วง −128..127 → <b class="danger">−140 ต่ำกว่า −128</b> → เก็บด้วย 8 บิตไม่ได้<br />🧮 ไม่ต้องคำนวณ<br />✔ <b class="ans-err">ERR</b> · เทคนิค: ค่าเกินช่วงตั้งแต่แรก → ตอบ ERR ไม่ใช่ไปแปลงเลข</div>
+                <div class="step-box"><b>ข้อ 16 · unsigned 8 บิต: −140 เขียนเป็น Hex?</b><br />🎯 ให้: unsigned 8 บิต · ถาม: รูปแบบ hex<br />ขั้น: unsigned เก็บค่าลบไม่ได้ → <b class="danger">−140 เกินช่วง 0..255</b><br />🧮 ไม่ต้องคำนวณ<br />✔ <b class="ans-err">ERR</b> · เทคนิค: ค่าลบใน unsigned = ERR — เหมือนข้อ 15 แต่เหตุผลคนละแบบ</div>
+              </div>
+            </div>
+
+            <div class="visual-box mt-6">
+              <span class="vb-label">ส่วนที่สี่ · 32 บิต และ Hex บวก-ลบ (ข้อ 17–20)</span>
+              <div class="step-list mt-3">
+                <div class="step-box"><b>ข้อ 17 · unsigned 32 บิต: 0xFFFFFFFB + 0x00000007 = ? (ตอบ decimal)</b><br />🎯 ให้: unsigned 32 บิต (ช่วง 0..4,294,967,295) · ถาม: ผลบวก<br />ขั้น: 0xFFFFFFFB = 2³² − 5 = 4,294,967,291 → +7 = 4,294,967,298 → เกิน 2³²−1 → wrap<br />🧮 <code>4,294,967,291 + 7 = 4,294,967,298</code> → <code>− 4,294,967,296 =</code><br />✔ <b class="ans-ok">2</b> · เทคนิคลัด: 0xFFFFFFFB + 0x00000007 = 0x1_00000002 → ตัดหลักเกิน 8 หลัก → 0x00000002 = 2</div>
+                <div class="step-box"><b>ข้อ 18 · unsigned 32 บิต: 0xFFFFFFFB + 0x00000007 = ? (ตอบ decimal)</b><br />🎯 ให้: โจทย์ซ้ำกับข้อ 17 เป๊ะ ๆ<br />ขั้น: วิธีคิดเหมือนข้อ 17 ทุกประการ<br />✔ <b class="ans-ok">2</b> · เทคนิค: เจอโจทย์ซ้ำ อย่าตกใจ — ตรวจระบบกับจำนวนบิตให้ดีก่อนตอบเหมือนเดิม</div>
+                <div class="step-box"><b>ข้อ 19 · unsigned 8 บิต: 0xC8 + 0xC4 = ? (ตอบ decimal)</b><br />🎯 ให้: unsigned 8 บิต · ถาม: ผลบวก<br />ขั้น: 0xC8 = 12×16+8 = 200, 0xC4 = 12×16+4 = 196 → 200+196 = 396 → เกิน 255 → wrap<br />🧮 <code>12×16+8 = 200</code> → <code>+ 196 = 396</code> → <code>− 256 =</code><br />✔ <b class="ans-ok">140</b> · เทคนิคลัด: บวก hex ตรง ๆ 0xC8+0xC4 = 0x18C → ตัดหลักเกิน → 0x8C = 8×16+12 = 140</div>
+                <div class="step-box"><b>ข้อ 20 · signed 8 บิต: 0xC8 + 0xC4 = ? (ตอบ decimal)</b><br />🎯 ให้: signed 8 บิต · ถาม: ผลบวก<br />ขั้น: MSB = 1 ทั้งคู่ → 0xC8 = 200−256 = −56, 0xC4 = 196−256 = −60 → −56 + −60 = −116<br />🧮 <code>200−256 = −56</code> → <code>196−256 = −60</code> → <code>−56 + −60 =</code><br />✔ <b class="ans-ok">−116</b> · เทคนิค: −116 อยู่ในช่วง −128..127 → ไม่ wrap, ไม่ ERR — บิตเดียวกันกับข้อ 19 แต่ระบบต่างกัน คำตอบต่างกัน</div>
+              </div>
+            </div>
+
+            <div class="tip-box tip-exam mt-6">
+              <i data-lucide="graduation-cap"></i>
+              <div><b>Exam Tip</b>ก่อนตอบทุกข้อ ให้ถามตัวเอง 3 คำถาม: <b class="cyan">(1)</b> ระบบ signed หรือ unsigned? <b class="cyan">(2)</b> กี่บิต? <b class="cyan">(3)</b> อยากได้คำตอบเป็น decimal หรือ hex? — ตอบครบ 3 ข้อนี้แล้วค่อยเริ่มคำนวณ</div>
+            </div>
+          </div>
+        </section>
+
+
       </div><!-- /viewport -->
 
       <!-- ================= BOTTOM BAR ================= -->

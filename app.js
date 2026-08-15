@@ -976,6 +976,16 @@
   function examStoreKey() { return "ca_exam" + (state.chapter === 1 ? "" : state.chapter); }
   function examData() { return (ch().exam) || []; }
   function examElId() { return "quizExam" + (state.chapter === 1 ? "" : state.chapter); }
+  /* ตำแหน่ง (0-based) ของสไลด์ข้อสอบใน viewport — ต้องเรียนครบเฉพาะสไลด์ที่อยู่ก่อนข้อสอบ
+     (หาเฉพาะสไลด์ที่มีกล่องข้อสอบ ไม่งั้นเจอ Quiz อื่นซึ่งใช้ class quiz-slide เหมือนกัน) */
+  function examSlideIndex() {
+    var vp = $("viewport");
+    var quizEl = vp ? vp.querySelector("#" + examElId()) : null;
+    if (!quizEl) return TOTAL - 1;
+    var sec = quizEl.closest ? quizEl.closest(".slide-view") : quizEl.parentNode;
+    if (!sec) return TOTAL - 1;
+    return Array.prototype.indexOf.call(vp.children, sec);
+  }
   /* Normalize user-typed answer: trim, lowercase, collapse spaces */
   function normText(s) {
     return String(s == null ? "" : s).trim().toLowerCase().replace(/\s+/g, " ");
@@ -1077,7 +1087,7 @@
   }
   /* หัวข้อสไลด์ข้อสอบ (static HTML) — สลับภาษาเมื่อกดปุ่ม */
   var EXAM_HEAD = {
-    1: { en: '<h2 class="slide-title">Post-Lesson Exam <span class="grad-text">20 Questions</span></h2>', subEn: "Number systems — signed/unsigned ranges, Two's Complement, and base conversion (finish all slides to unlock; see the solution right after answering)" },
+    1: { en: '<h2 class="slide-title">Post-Lesson Exam <span class="grad-text">20 Questions</span></h2>', subEn: "Number systems — signed/unsigned ranges, Two's Complement, and base conversion (finish all slides to unlock; check your answer right away, then press 'Step-by-step' to see the full solution)" },
     2: { en: '<h2 class="slide-title">Post-Lesson Exam <span class="grad-text">10 Questions</span></h2>', subEn: "Trace the q1t8.asm program — memory bytes, lb/lbu sign & zero extension + 32-bit signed/unsigned numbers (finish all slides to unlock; see solutions right after answering)" },
     3: { en: '<h2 class="slide-title">Post-Lesson Exam <span class="grad-text">17 Questions</span></h2>', subEn: "Trace the bitwise.asm program (Q1–14) + write instructions (Q15–17) — type your answer; finish all slides to unlock" },
     4: { en: '<h2 class="slide-title">Post-Lesson Exam <span class="grad-text">20 Questions</span></h2>', subEn: "Trace the fib.asm program (Q1–20) — answer in hex starting with 0x or in decimal as asked — type your answer; finish all slides to unlock" },
@@ -1098,7 +1108,8 @@
     if (!el) return;
     applyExamHeaderLang();
     var qs = examData();
-    var need = TOTAL - 1; // ต้องเรียนครบทุกสไลด์ (ยกเว้นสไลด์ข้อสอบ)
+    /* ต้องเรียนครบเฉพาะสไลด์ที่อยู่ก่อนข้อสอบ (บท 1 ข้อสอบอยู่ก่อนสไลด์เฉลย จึงไม่ต้องเรียนเฉลยก่อนสอบ) */
+    var need = examSlideIndex();
     var allDone = true;
     for (var i = 0; i < need; i++) { if (state.completed.indexOf(i) === -1) { allDone = false; break; } }
     if (!allDone) { renderExamLock(el, need); return; }
@@ -1139,6 +1150,7 @@
     var st = examState();
     var chosen = st.answers[qi];
     var answered = chosen !== undefined;
+    examModalQ = q;
     var optList = enQ(q, "options");
     var opts = optList.map(function (o, oi) {
       var cls = "quiz-option";
@@ -1152,6 +1164,9 @@
     }).join("");
     var qLabel = examUI("ข้อที่ " + (qi + 1) + " / " + qs.length + " · ข้อสอบหลังเรียน · บทที่ " + state.chapter, "Q " + (qi + 1) + " / " + qs.length + " · Post-Lesson Exam · Ch. " + state.chapter);
     var scoreLabel = examUI("คะแนนตอนนี้: ", "Score: ");
+    var okLbl = examUI("ถูกต้อง!", "Correct!");
+    var badLbl = examUI("ยังไม่ถูกนะ", "Not quite");
+    var stepsBtn = '<button class="btn btn-ghost" id="qqSteps"><i data-lucide="book-open"></i> ' + examUI("ดูวิธีทำทีละขั้น", "Step-by-step") + "</button>";
     var nextBtn = examUI('<button class="btn btn-primary" id="qqNext">ข้อถัดไป <i data-lucide="arrow-right"></i></button>', '<button class="btn btn-primary" id="qqNext">Next <i data-lucide="arrow-right"></i></button>');
     var finishBtn = examUI('<button class="btn btn-primary" id="qqFinish">ดูผลลัพธ์ <i data-lucide="flag"></i></button>', '<button class="btn btn-primary" id="qqFinish">Results <i data-lucide="flag"></i></button>');
 
@@ -1165,9 +1180,9 @@
       examCodeHTML(q) +
       '<div class="flex" style="flex-direction:column;gap:10px">' + opts + "</div>" +
       (answered
-        ?          '<div class="quiz-explanation mt-4">💡 ' + esc(enQ(q, "explain")) + "</div>" +
-          (!(answered && chosen === q.correct) ? stepsHTML(q) : "") +
-          '<div class="flex items-center gap-3 mt-5 wrap">' +
+        ? '<div class="exam-feedback ' + (chosen === q.correct ? "ok" : "bad") + '"><span class="ef-mark">' + (chosen === q.correct ? "✅" : "❌") + "</span><div><b>" + (chosen === q.correct ? okLbl : badLbl) + "</b></div></div>" +
+          '<div class="flex items-center gap-3 mt-4 wrap">' +
+          stepsBtn +
           (qi < qs.length - 1 ? nextBtn : finishBtn) +
           "</div>"
         : '<div class="tip-box tip-note mt-4" style="margin-top:18px"><i data-lucide="lightbulb"></i><div><b>Hint</b>' + examHint() + "</div></div>")
@@ -1187,21 +1202,22 @@
           qsa(".quiz-option", el).forEach(function (x) { if (parseInt(x.dataset.opt, 10) === q.correct) x.classList.add("correct"); });
         }
         qsa(".quiz-option", el).forEach(function (x) { x.classList.add("locked"); x.setAttribute("disabled", "disabled"); });
-        var exp = document.createElement("div");
-        exp.className = "quiz-explanation mt-4";
-        exp.innerHTML = (correct ? examUI("✅ ถูกต้อง! ", "✅ Correct! ") : examUI("❌ ยังไม่ถูกนะ ", "❌ Not quite ")) + "💡 " + esc(enQ(q, "explain"));
-        el.querySelector(".quiz-option").closest("div.flex").insertAdjacentElement("afterend", exp);
+        var fb = document.createElement("div");
+        fb.className = "exam-feedback " + (correct ? "ok" : "bad");
+        fb.innerHTML = '<span class="ef-mark">' + (correct ? "✅" : "❌") + "</span><div><b>" + (correct ? okLbl : badLbl) + "</b></div>";
+        el.querySelector(".quiz-option").closest("div.flex").insertAdjacentElement("afterend", fb);
         var nav = document.createElement("div");
-        nav.className = "flex items-center gap-3 mt-5 wrap";
-        nav.innerHTML = qi < qs.length - 1 ? nextBtn : finishBtn;
-        exp.insertAdjacentElement("afterend", nav);
-        appendStepsIfWrong(nav, correct, q);
+        nav.className = "flex items-center gap-3 mt-4 wrap";
+        nav.innerHTML = stepsBtn + (qi < qs.length - 1 ? nextBtn : finishBtn);
+        fb.insertAdjacentElement("afterend", nav);
         icons();
         bindExamNav();
+        bindExamModal();
         if (correct) toast(examUI("✅ ถูกต้อง!", "✅ Correct!"), 1200);
       });
     });
     bindExamNav();
+    bindExamModal();
   }
   function bindExamNav() {
     var n = $("qqNext"); if (n) n.addEventListener("click", function () { renderExam(); });
@@ -1215,6 +1231,59 @@
     });
   }
 
+  /* ---------- Modal วิธีทำทีละขั้น — แสดงวิธีทำแบบละเอียดตั้งแต่ขั้นแรก ---------- */
+  var examModalQ = null; /* ข้อที่กำลังแสดง (สำหรับปุ่มเปิด modal) */
+  function examModal() {
+    var m = $("examModal");
+    if (!m) {
+      m = document.createElement("div");
+      m.id = "examModal";
+      m.className = "exam-modal";
+      m.setAttribute("role", "dialog");
+      m.setAttribute("aria-modal", "true");
+      m.setAttribute("aria-label", examUI("วิธีทำทีละขั้น", "Step-by-step solution"));
+      m.innerHTML =
+        '<div class="exam-modal-card">' +
+        '<div class="exam-modal-head"><b>📖 ' + examUI("วิธีทำทีละขั้น", "Step-by-step solution") + '</b>' +
+        '<button class="exam-modal-close" id="examModalClose" aria-label="' + examUI("ปิด", "Close") + '">✕</button></div>' +
+        '<div class="exam-modal-body" id="examModalBody"></div>' +
+        '<div class="exam-modal-foot"><button class="btn btn-primary" id="examModalDone"><i data-lucide="check"></i> ' + examUI("ปิด", "Close") + "</button></div>" +
+        "</div>";
+      document.body.appendChild(m);
+      m.addEventListener("click", function (e) { if (e.target === m) closeExamModal(); });
+      var c = $("examModalClose"); if (c) c.addEventListener("click", closeExamModal);
+      var d = $("examModalDone"); if (d) d.addEventListener("click", closeExamModal);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeExamModal(); });
+      icons();
+    }
+    return m;
+  }
+  function openExamModal() {
+    var q = examModalQ;
+    if (!q) return;
+    var m = examModal();
+    var steps = enQ(q, "steps") || [];
+    var explain = enQ(q, "explain");
+    var correctAns = q.type === "text" ? (q.answers && q.answers[0]) : (enQ(q, "options") || [])[q.correct];
+    $("examModalBody").innerHTML =
+      '<p class="exam-modal-label">' + examUI("วิธีทำ — ดูตั้งแต่ขั้นแรกว่าคิดยังไง", "Method — from the very first step") + "</p>" +
+      '<p class="exam-modal-q">' + esc(enQ(q, "q")) + "</p>" +
+      '<p class="exam-modal-ans">' + examUI("คำตอบที่ถูกต้อง: ", "Correct answer: ") + '<code>' + esc(String(correctAns)) + "</code></p>" +
+      (steps.length ? stepsHTML(q) : "") +
+      (explain ? '<div class="quiz-explanation mt-4">💡 ' + esc(explain) + "</div>" : "");
+    icons();
+    m.classList.add("open");
+    document.body.classList.add("modal-open");
+  }
+  function closeExamModal() {
+    var m = $("examModal");
+    if (m) { m.classList.remove("open"); document.body.classList.remove("modal-open"); }
+  }
+  function bindExamModal() {
+    var b = $("qqSteps");
+    if (b) b.addEventListener("click", openExamModal);
+  }
+
   /* ข้อสอบแบบพิมพ์คำตอบ (type: "text") — ผู้เรียนพิมพ์คำตอบเอง เช่น เลขฐาน 16 หรือคำสั่ง MIPS */
   function renderExamTextQuestion(qi, el, qs) {
     var q = qs[qi];
@@ -1222,10 +1291,12 @@
     var chosen = st.answers[qi];
     var answered = chosen !== undefined;
     var correct = answered && examAnswerCorrect(q, chosen);
+    examModalQ = q;
 
     var hint = enQ(q, "hint") || examHint();
     var qLabel = examUI("ข้อที่ " + (qi + 1) + " / " + qs.length + " · ข้อสอบหลังเรียน · บทที่ " + state.chapter, "Q " + (qi + 1) + " / " + qs.length + " · Post-Lesson Exam · Ch. " + state.chapter);
     var scoreLabel = examUI("คะแนนตอนนี้: ", "Score: ");
+    var stepsBtn = '<button class="btn btn-ghost" id="qqSteps"><i data-lucide="book-open"></i> ' + examUI("ดูวิธีทำทีละขั้น", "Step-by-step") + "</button>";
     var nextBtn = examUI('<button class="btn btn-primary" id="qqNext">ข้อถัดไป <i data-lucide="arrow-right"></i></button>', '<button class="btn btn-primary" id="qqNext">Next <i data-lucide="arrow-right"></i></button>');
     var finishBtn = examUI('<button class="btn btn-primary" id="qqFinish">ดูผลลัพธ์ <i data-lucide="flag"></i></button>', '<button class="btn btn-primary" id="qqFinish">Results <i data-lucide="flag"></i></button>');
     var okLbl = examUI("ถูกต้อง!", "Correct!");
@@ -1247,9 +1318,8 @@
         ? '<div class="exam-feedback ' + (correct ? "ok" : "bad") + '"><span class="ef-mark">' + (correct ? "✅" : "❌") + "</span><div><b>" + (correct ? okLbl : badLbl) + '</b><p class="ef-your">' + yourLbl + '<code>' + esc(chosen) + "</code></p>" +
           (correct ? "" : '<p class="ef-ans">' + ansLbl + '<code>' + esc(q.answers[0]) + "</code></p>") +
           "</div></div>" +
-          '<div class="quiz-explanation mt-4">💡 ' + esc(enQ(q, "explain")) + "</div>" +
-          (!correct ? stepsHTML(q) : "") +
-          '<div class="flex items-center gap-3 mt-5 wrap">' +
+          '<div class="flex items-center gap-3 mt-4 wrap">' +
+          stepsBtn +
           (qi < qs.length - 1 ? nextBtn : finishBtn) +
           "</div>"
         : '<div class="exam-input-row mt-4">' +
@@ -1263,6 +1333,7 @@
 
     if (answered) {
       bindExamNav();
+      bindExamModal();
       return;
     }
     var input = $("qqTextInput");
@@ -1271,7 +1342,7 @@
       if (!v) { toast(examUI("พิมพ์คำตอบก่อนส่งจ้า ✍️", "Type an answer first ✍️"), 1400); return; }
       st.answers[qi] = v;
       LS.set(examStoreKey(), st);
-      renderExamQuestion(qi, el, qs); /* re-render ข้อเดิมเพื่อแสดงเฉลยก่อนกดข้อถัดไป */
+      renderExamQuestion(qi, el, qs); /* re-render ข้อเดิมเพื่อแสดงผลถูก/ผิด + ปุ่มดูวิธีทำทีละขั้น */
     };
     if (input) input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } });
     var s = $("qqSubmit");
@@ -1295,6 +1366,20 @@
       st.best = sc;
       LS.set(examStoreKey(), st);
     }
+    /* ตารางสรุปข้อถูก/ผิด ดูทีเดียวจบ */
+    var grid = '<div class="exam-answer-grid mt-5" aria-label="สรุปข้อที่ตอบถูกและผิด">' +
+      qs.map(function (q, j) {
+        var ok = examAnswerCorrect(q, st.answers[j]);
+        return '<span class="ans-chip ' + (ok ? "ok" : "bad") + '">Q' + (j + 1) + " " + (ok ? "✓" : "✗") + "</span>";
+      }).join("") + "</div>" +
+      '<p class="text-3 mt-2" style="font-size:12.5px">' + examUI("เขียว = ตอบถูก · แดง = ตอบผิด — ย้อนดูวิธีทำละเอียดได้ที่สไลด์เฉลยถัดไป", "Green = correct · Red = wrong — see the full step-by-step on the solution slides next") + "</p>";
+    /* ปุ่มไปสไลด์เฉลยละเอียด — เฉพาะบทที่มีสไลด์เฉลย (บท 1) */
+    var solBtn = "";
+    var solIdx = -1;
+    ch().slides.forEach(function (sl, i) { if (solIdx === -1 && sl.title.indexOf("เฉลยข้อสอบ 20 ข้อ") !== -1) solIdx = i; });
+    if (solIdx !== -1) {
+      solBtn = '<button class="btn btn-primary" id="qqToSolutions"><i data-lucide="book-open-check"></i> ' + examUI("ดูเฉลยละเอียดทีละขั้น", "See step-by-step solutions") + "</button>";
+    }
     var ring = 2 * Math.PI * 62;
     var offset = ring - (sc / qs.length) * ring;
     el.innerHTML =
@@ -1309,7 +1394,9 @@
       '<div class="ring-num">' + sc + "/" + qs.length + "</div></div>" +
       "<p class='mt-3 text-2' style='font-weight:700'>" + pct + "% · " + msg + "</p>" +
       '<p class="text-3 mt-2" style="font-size:13px">' + examUI("คะแนนดีที่สุด: ", "Best score: ") + '<b class="cyan">' + (st.best === null ? "–" : st.best + "/" + qs.length) + "</b></p>" +
+      grid +
       '<div class="flex items-center gap-3 mt-5 wrap" style="justify-content:center">' +
+      solBtn +
       '<button class="btn btn-ghost" id="qqRetry"><i data-lucide="rotate-ccw"></i> ' + examUI("ทำใหม่ทั้งชุด", "Retry all") + "</button>" +
       '<button class="btn btn-primary" id="qqToCards"><i data-lucide="square-stack"></i> ' + examUI("ไปการ์ดทบทวน", "Review cards") + "</button>" +
       "</div></div>";
@@ -1330,6 +1417,8 @@
       ch().slides.forEach(function (s, i) { if (s.title.indexOf("Flashcards") !== -1) ci = i; });
       if (ci !== -1) goTo(ch().start + ci, 1);
     });
+    var sv = $("qqToSolutions");
+    if (sv) sv.addEventListener("click", function () { if (solIdx !== -1) goTo(ch().start + solIdx, 1); });
   }
 
   /* ---------- Flashcards (slide 24) ---------- */
