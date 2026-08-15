@@ -18,18 +18,25 @@ window.DATA = {
     { title: "MIPS Instruction Formats (R/I/J)", short: "รูปแบบคำสั่ง 3 แบบ" },
     { title: "ทำไม Instruction ต้องเป็น 32 bits?", short: "ทำไม 32 bits" },
     { title: "Bit คืออะไร และ N-bit เก็บค่าได้กี่แบบ", short: "Bit & N-bit" },
+    { title: "เลขฐานสองทีละขั้น — ค่าประจำตำแหน่ง 8|4|2|1", short: "Binary ทีละขั้น" },
     { title: "เลขฐาน 2 / 10 / 16 — แปลงไปมาให้คล่อง", short: "แปลงเลขฐาน" },
     { title: "Unsigned Range และการหาจำนวนบิตที่ต้องใช้", short: "Unsigned Range" },
     { title: "Signed Range, MSB และ Sign Bit", short: "Signed Range" },
     { title: "Two's Complement — แปลงเป็นค่าลบ (ไปและกลับ)", short: "Two's Complement" },
     { title: "บวก-ลบเลข Signed/Unsigned, Overflow และ ERR", short: "Overflow & ERR" },
+    { title: "เครื่องคิดเลขพื้นฐาน — คิดเลขในห้องสอบโดยไม่พึ่งเครื่องวิทยาศาสตร์", short: "เครื่องคิดเลขพื้นฐาน" },
+    { title: "ช่วงค่าครบชุด — 4, 6, 8, 16, 32 บิต", short: "ช่วงค่าครบชุด" },
+    { title: "บวก-ลบ Fixed Width — กติกาทั้ง 4 แบบ", short: "กติกาบวก-ลบ" },
+    { title: "ระบบ 32 บิต — ช่วงกว้างกว่า กติกาเหมือนเดิม", short: "32 บิต" },
     { title: "Chapter Summary — สรุปบทเรียน", short: "สรุปบทเรียน" },
     { title: "Exam Cheat Sheet — สูตรจำก่อนสอบ", short: "สูตรจำก่อนสอบ" },
     { title: "Quiz 1 (ข้อ 1–5)", short: "แบบทดสอบ 1" },
     { title: "Quiz 2 (ข้อ 6–10)", short: "แบบทดสอบ 2" },
     { title: "Flashcards — ทบทวนการ์ด", short: "การ์ดทบทวน" },
     { title: "Glossary — คำศัพท์", short: "คำศัพท์" },
-    { title: "ข้อสอบหลังเรียน — แบบทดสอบท้ายบท 20 ข้อ", short: "ข้อสอบหลังเรียน" }
+    { title: "ข้อสอบหลังเรียน — แบบทดสอบท้ายบท 20 ข้อ", short: "ข้อสอบหลังเรียน" },
+    { title: "เฉลยข้อสอบ 20 ข้อ (ข้อ 1–10) — ทำทีละขั้น", short: "เฉลยข้อ 1–10" },
+    { title: "เฉลยข้อสอบ 20 ข้อ (ข้อ 11–20) — ทำทีละขั้น", short: "เฉลยข้อ 11–20" }
   ],
 
   /* Sidebar structure: slide indices 1-based */
@@ -39,8 +46,11 @@ window.DATA = {
     { label: "2. การทำงานของ CPU", topics: [5, 6] },
     { label: "3. ภาษาเครื่องและคำสั่ง", topics: [7, 8] },
     { label: "4. รูปแบบคำสั่ง MIPS", topics: [9, 10] },
-    { label: "5. ระบบเลข & Two's Complement", topics: [11, 12, 13, 14] },
-    { label: "ทบทวนและฝึกฝน", topics: [15, 16, 17, 18, 19, 20, 21, 22, 23] }
+    { label: "5. ระบบเลข & Two's Complement", topics: [11, 12, 13, 14, 15, 16, 17] },
+    { label: "6. ช่วงค่า & การคำนวณ", topics: [18, 19, 20, 21] },
+    { label: "ทบทวนและฝึกฝน", topics: [22, 23, 24, 25, 26, 27] },
+    { label: "ข้อสอบหลังเรียน", topics: [28] },
+    { label: "เฉลยละเอียดทีละขั้น", topics: [29, 30] }
   ],
 
   /* Slide 2 — roadmap cards */
